@@ -14,6 +14,10 @@
 
 WebServer server(80);
 
+// DeepSleep
+#include "esp_sleep.h"
+#define DEEPSLEEP_TIME_US    180 * 1000000 // 3分
+
 // FATFS
 const char *CONFIG_FILE = "/wifi_config.json";
 
@@ -153,6 +157,9 @@ static void set_ntp_to_rtc_time(void)
 
 void app_wifi_init(void)
 {
+    // Deep Sleep
+    esp_sleep_enable_timer_wakeup (DEEPSLEEP_TIME_US);
+
     Serial.println("FATFS初期化");
     if (!FFat.begin(true))
     {
@@ -226,5 +233,9 @@ void app_wifi_main(void)
                             rtc_timeinfo.tm_sec);
             lastPrint = millis();
         }
+
+        // DeepSleep @DEEPSLEEP_TIME_US
+        Serial.printf("DeepSleep @%d min", (DEEPSLEEP_TIME_US / 60) / 1000000);
+        esp_deep_sleep_start();
     }
 }

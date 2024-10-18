@@ -1,14 +1,22 @@
-#include "app_wifi.hpp"
+/**
+ * @file esp32_s3_dev.ino
+ * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @brief ESP32評価プログラム Arduino IDEファイル
+ * @version 0.1
+ * @date 2024-10-18
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+#include "app_main_core1.hpp"
 
 void setup()
 {
-    Serial.begin(115200);
-    Serial.println("UART初期化");
-
-    app_wifi_init();
+    app_main_init_core1();
 }
 
 void loop()
 {
-    app_wifi_main();
+    app_main_core1();
 }
