@@ -13,15 +13,18 @@
 
 // Lib, Drv
 #include <WiFi.h>
-#include "FS.h"
-#include "FFat.h"
 #include <WebServer.h>
 #include <time.h>
 #include <ArduinoJson.h>
 #include "soc/rtc.h"
+#include "FS.h"
+#include "FFat.h"
 
 // APP
 // #include "app_wifi_inital_html.hpp"
+
+#define RTC_TIME    false
+#define NTP_TIME    true
 
 struct WiFiConfig
 {
@@ -30,6 +33,6 @@ struct WiFiConfig
 };
 
 void app_wifi_init(void);
-void app_wifi_main(void);
+bool app_wifi_main(void);
 
 #endif /* APP_WIFI_HPP */
