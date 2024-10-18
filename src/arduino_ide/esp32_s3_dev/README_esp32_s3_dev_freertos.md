@@ -1,5 +1,5 @@
-# ESP32 FreeRTOS F/W
-ESP32 FreeRTOS F/W🥳
+# ESP32-S3 FreeRTOS F/W by ちみ
+ESP32-S3 FreeRTOS F/W🥳
 
 ## ✅実装した機能
 - ✅Core0 ... ドライバコアCPU
