@@ -3,16 +3,19 @@ ESP32 Firmeware C++ Develop by Chimi\
 C++でのESP32 F/W 個人開発リポジトリ🥳
 
 ## ✅実装した機能
+
 - CPU x2コア
   - ✅Core0 ... ドライバCPU
     - ドライバ関連
   - ✅Core1 ... アプリCPU
     - ✅WiFiアプリ
-      - ✅AP ... HTMLサーバでSTAのSSID、パスワードを取得
-      - ✅STA ... NTPから時刻同期、ESP32のRTCとNTPの時刻を同期
+      - ✅AP ... 自己HTML鯖でSTAのSSIDとパスワードを取得
+      - ✅STA ... ESP32のRTCをNTP鯖と同期してWiFi切断
+    - ✅メインループ
+      - ✅DeepSleep
+        - ✅3分おきに起床
 
 ## 🛠️TBD
-- 🛠️DeepSleep ... DeepSleepでバッテリー消費を押させたい
 - 🛠️FreeRTOS ... CPU2コアそれぞれ
 - 🛠️WiFi ... FTPの追加
 - 🛠️割込み（IRQ） ... ボタンやPIOからIRQがほしい
