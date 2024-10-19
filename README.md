@@ -5,19 +5,17 @@ ESP32 FreeRTOS F/W🥳
 - ✅Core0 ... ドライバコアCPU
   - ✅loopTask
     - ドライバ関連
-  - ✅rgbLedTask
-    - NeoPixelでRGB LEDの処理
 
 - ✅Core1 ... アプリコアCPU
-  - ✅rgbLedTask
     - ✅WiFiアプリ
+        - ✅RGB LED : WiFiの状態に応じて色表示
         - ✅AP
         - HTTP : HTMLでSTAのSSIDとパスワード入力受け
         - ✅STA
         - FTP : FATFSでフラッシュにファイルをR/W
         - NTP : RTCと同期
         - HTTP : HTMLに各種データのI/O
-      - ✅DeepSleep
+      - ✅DeepSleep : TBD
     - ✅loopTask
       - TBD
 

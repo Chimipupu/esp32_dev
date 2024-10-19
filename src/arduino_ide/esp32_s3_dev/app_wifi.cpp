@@ -13,6 +13,9 @@
 #include "app_wifi_inital_html.hpp"
 #include "app_ftp.hpp"
 #include "app_file_system.hpp"
+#include "app_neopixel.hpp"
+
+static rgbled_state_t s_rgbled_state;
 
 WebServer server(80);
 
@@ -203,11 +206,13 @@ static void wifi_online_proc(void)
 
 static void wifi_off_online_proc(void)
 {
-    g_wifi_flag = true;
+    app_neopixel_main(16, 0, 0, 0,true, false); // red, on
 }
 
 static void uap_mode(void)
 {
+    app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+
     setupAP();
     Serial.println("Web鯖 begin...");
     s_html_type = STA_WIFI_CONFIG;
@@ -258,6 +263,8 @@ void app_wifi_init(void)
 
         if (WiFi.status() == WL_CONNECTED)
         {
+            app_neopixel_main(0, 16, 0, 0,true, false); // green, on
+
             g_wifi_flag = true;
             Serial.println("\nWiFi接続完了!");
             Serial.print("IP address: ");

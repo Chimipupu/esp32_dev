@@ -40,6 +40,10 @@ void app_main_init_core1(void)
     Serial.begin(115200);
     Serial.println("UART初期化");
 
+    // RGB LED (NeoPixel)
+    app_neopixel_init();
+    app_neopixel_main(16, 0, 0, 0,true, false); // red, on
+
     // Deep Sleep
     esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
@@ -48,9 +52,9 @@ void app_main_init_core1(void)
                             "core1WiFiTask",   // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
-                            3,                 // 優先度(0～7、7が最優先)
+                            5,                 // 優先度(0～7、7が最優先)
                             NULL,              // ハンドル
-                            1);                // Core0 or Core1
+                            CPU_CORE_1);       // Core0 or Core1
 }
 
 void app_main_core1(void)

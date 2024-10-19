@@ -10,15 +10,25 @@
  */
 #include "app_neopixel.hpp"
 
-#define MAX_LIGHT               32
-#define MAX_BRIGHTNESS          32
-#define LED_COLOR_ON_TIMER      100
-#define RGBLED_NUM              1
+#define MAX_BRIGHTNESS          32      // 最大輝度
+#define LED_COLOR_ON_TIMER      100     // 1色の表示時間
+#define RGBLED_NUM              1       // RGB LEDの数
+
+static uint8_t s_red = 0;        // 赤
+static uint8_t s_green = 0;      // 青
+static uint8_t s_blue = 0;       // 緑
+static uint8_t s_brightness = 0; // 明るさ
+static bool s_onoff = false;     // 消灯=false, 点灯=ture
+static bool s_autoled = false;   // 手動=false, 自動=ture
 
 Adafruit_NeoPixel pixels(RGBLED_NUM,
                         RGBLED_PIN,
                         NEO_GRB + NEO_KHZ800);
 
+/**
+ * @brief RGB LED 初期化
+ * 
+ */
 void app_neopixel_init(void)
 {
     pixels.begin();
@@ -26,11 +36,12 @@ void app_neopixel_init(void)
     pixels.show();
 }
 
-void app_neopixel_main(void)
+/**
+ * @brief 全カラー回転表示
+ * 
+ */
+static void rgbled_fade(void)
 {
-    static uint8_t s_red = 0;
-    static uint8_t s_green = 0;
-    static uint8_t s_blue = 0;
     uint8_t cnt, red,green,blue;
 
     red = MAX_BRIGHTNESS;
@@ -72,4 +83,36 @@ void app_neopixel_main(void)
         delay(LED_COLOR_ON_TIMER);
     }
     s_blue = 0;
+}
+
+/**
+ * @brief 指定のRGBにLEDを点灯 or 発光
+ * 
+ * @param red 赤
+ * @param green 緑
+ * @param blue 青
+ * @param brightness 明るさ
+ * @param onoff ON/OFF
+ * @param autoled 自動で色を遷移し続けるか
+ */
+void app_neopixel_main(uint8_t red,uint8_t green, uint8_t blue, uint8_t brightness, bool onoff, bool autoled)
+{
+    s_red = red;
+    s_blue = blue;
+    s_green = green;
+    s_brightness = brightness;
+    s_onoff = onoff;
+    s_autoled = autoled;
+
+    if(s_autoled != true){
+        if (s_onoff != false) {
+            pixels.setPixelColor(0, pixels.Color(s_red, s_green, s_blue));
+            pixels.show();
+        }else{
+            pixels.clear();
+            pixels.show();
+        }
+    }else{
+        rgbled_fade();
+    }
 }
