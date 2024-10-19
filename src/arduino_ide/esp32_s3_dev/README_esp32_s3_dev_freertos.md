@@ -9,12 +9,15 @@ ESP32-S3 FreeRTOS F/W🥳
 - ✅Core1 ... アプリコアCPU
     - ✅WiFiアプリ
         - ✅RGB LED : WiFiの状態に応じて色表示
+          - 赤 : オフライン状態（WiFi未接続）
+          - 青 : APモード
+          - 緑 : オンライン(STAモード)
         - ✅AP
-        - HTTP : HTMLでSTAのSSIDとパスワード入力受け
+          - HTTP : HTMLでSTAのSSIDとパスワード入力受け
         - ✅STA
-        - FTP : FATFSでフラッシュにファイルをR/W
-        - NTP : RTCと同期
-        - HTTP : HTMLに各種データのI/O
+          - FTP : FATFSでフラッシュにファイルをR/W
+          - NTP : RTCと同期
+          - HTTP : HTMLに各種データのI/O
       - ✅DeepSleep : TBD
     - ✅loopTask
       - TBD

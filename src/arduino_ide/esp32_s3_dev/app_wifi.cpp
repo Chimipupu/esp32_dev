@@ -15,8 +15,6 @@
 #include "app_file_system.hpp"
 #include "app_neopixel.hpp"
 
-static rgbled_state_t s_rgbled_state;
-
 WebServer server(80);
 
 // ファイルシステム
@@ -38,9 +36,12 @@ typedef enum {
 } e_html_type;
 
 static e_html_type s_html_type = STA_WIFI_CONFIG;
-static bool g_wifi_flag = false;
+static rgbled_state_t s_rgbled_state;
 static tm s_ntp_timeinfo_t;
 static tm s_rtc_timeinfo_t;
+static bool s_wifi_flag = false;
+static bool s_ap_flg = false;
+static bool s_ftp_flg = false;
 
 static bool loadWiFiConfig(void);
 static void saveWiFiConfig(const String &ssid, const String &password);
@@ -51,7 +52,8 @@ static void time_show(bool type);
 static void set_ntp_to_rtc_time(void);
 static void wifi_online_proc(void);
 static void wifi_off_online_proc(void);
-static void uap_mode(void);
+static void ap_mode_main(void);
+static void sta_mode_main(void);
 
 WiFiConfig config;
 
@@ -112,6 +114,8 @@ static void setupAP(void)
 
     Serial.print("AP Web Server IP addr: ");
     Serial.println(WiFi.softAPIP());
+    Serial.print("WiFi MAC addr : ");
+    Serial.println(WiFi.macAddress());
 }
 
 static void handleRoot(void)
@@ -143,10 +147,10 @@ static void handleSave(void)
         Serial.print("STA SSID & Password Saved! Now on reboot...");
         server.send(200, "text/plain", "設定を保存しました。デバイスを再起動します。");
         delay(2000);
+
+        // reboot
         ESP.restart();
-    }
-    else
-    {
+    } else {
         server.send(400, "text/plain", "無効なリクエストです");
     }
 }
@@ -187,7 +191,6 @@ static void set_ntp_to_rtc_time(void)
     char timeStr[100], rtcStr[100];
 
     Serial.println("NTPとRTCを同期開始");
-    time_show(NTP_TIME);
     strftime(timeStr, sizeof(timeStr), "NTP: %Y/%m/%d %H:%M:%S", &s_ntp_timeinfo_t);
 
     time_t now;
@@ -196,24 +199,98 @@ static void set_ntp_to_rtc_time(void)
     settimeofday(&tv, NULL);
 
     Serial.println("NTPとRTCを同期完了");
+    time_show(NTP_TIME);
     time_show(RTC_TIME);
 }
 
 static void wifi_online_proc(void)
 {
-    app_ftp_main();
+    if(s_ap_flg != true){
+        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
+    }else{
+        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+    }
+
+    if(s_ftp_flg != false)
+    {
+        app_ftp_main();
+    }
 }
 
 static void wifi_off_online_proc(void)
 {
-    app_neopixel_main(16, 0, 0, 0,true, false); // red, on
+    if(s_ap_flg != true){
+        app_neopixel_main(16, 0, 0, 0,true, false); // red, on
+    }else{
+        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+    }
 }
 
-static void uap_mode(void)
+static void sta_mode_main(void)
 {
+    Serial.println("STAモードで接続を試みます");
+    WiFi.mode(WIFI_STA);
+    Serial.print("STA SSID: ");
+    Serial.println(config.ssid.c_str());
+    Serial.print("STA Password: ");
+    Serial.println(config.password.c_str());
+    WiFi.begin(config.ssid.c_str(), config.password.c_str());
+
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 30)
+    {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+    }
+
+    Serial.print("\n");
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        s_wifi_flag = true;
+        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
+
+        Serial.println("\nWiFi接続完了!");
+        Serial.print("IP addr : ");
+        Serial.println(WiFi.localIP());
+        Serial.print("WiFi MAC addr : ");
+        Serial.println(WiFi.macAddress());
+
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        Serial.println("NTPサーバーに接続中...");
+
+        set_ntp_to_rtc_time();
+
+        // WEB Server
+        s_html_type = INDEX;
+        server.on("/", handleRoot);
+        server.begin();
+        server.handleClient();
+
+        // time_show(NTP_TIME);
+        // time_show(RTC_TIME);
+
+        // FTP Server
+        app_ftp_init();
+        s_ftp_flg = true;
+
+        // Serial.println("WiFiから切断");
+        // WiFi.disconnect();
+        // s_wifi_flag = false;
+    } else {
+        s_wifi_flag = true;
+        ap_mode_main();
+    }
+}
+
+static void ap_mode_main(void)
+{
+    s_ap_flg = true;
     app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
 
     setupAP();
+
     Serial.println("Web鯖 begin...");
     s_html_type = STA_WIFI_CONFIG;
     server.on("/", handleRoot);
@@ -241,72 +318,21 @@ void app_wifi_init(void)
     }
 
     Serial.println("WiFi設定を読み込み中...");
+
     if (loadWiFiConfig() && config.ssid.length() > 0)
     {
-        Serial.println("STAモードで接続を試みます");
-        WiFi.mode(WIFI_STA);
-        Serial.print("STA SSID: ");
-        Serial.println(config.ssid.c_str());
-        Serial.print("STA Password: ");
-        Serial.println(config.password.c_str());
-        WiFi.begin(config.ssid.c_str(), config.password.c_str());
-
-        int attempts = 0;
-        while (WiFi.status() != WL_CONNECTED && attempts < 30)
-        {
-            delay(500);
-            Serial.print(".");
-            attempts++;
-        }
-
-        Serial.print("\n");
-
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            app_neopixel_main(0, 16, 0, 0,true, false); // green, on
-
-            g_wifi_flag = true;
-            Serial.println("\nWiFi接続完了!");
-            Serial.print("IP address: ");
-            Serial.println(WiFi.localIP());
-
-            configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-            Serial.println("NTPサーバーに接続中...");
-
-            set_ntp_to_rtc_time();
-
-            // WEB Server
-            s_html_type = INDEX;
-            server.on("/", handleRoot);
-            server.begin();
-            server.handleClient();
-
-            time_show(NTP_TIME);
-            time_show(RTC_TIME);
-
-            // FTP Server
-            app_ftp_init();
-
-            // Serial.println("WiFiから切断");
-            // WiFi.disconnect();
-            // g_wifi_flag = false;
-        }
-        else
-        {
-            g_wifi_flag = true;
-            uap_mode();
-        }
+        sta_mode_main();
     }
     else
     {
-        g_wifi_flag = true;
-        uap_mode();
+        s_wifi_flag = true;
+        ap_mode_main();
     }
 }
 
 bool app_wifi_main(void)
 {
-    if (WiFi.status() == WL_CONNECTED)
+    if(WiFi.status() == WL_CONNECTED)
     {
         wifi_online_proc();
     }else{
@@ -315,5 +341,5 @@ bool app_wifi_main(void)
 
     server.handleClient();
 
-    return g_wifi_flag;
+    return s_wifi_flag;
 }
