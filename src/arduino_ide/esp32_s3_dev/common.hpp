@@ -12,6 +12,20 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+// #define YD_ESP32_S3
+
+#ifndef ATOM_S3_LITE
+#include <M5AtomS3.h>
+#define ATOM_S3_LITE
+#endif
+
+// GPIO
+#ifdef YD_ESP32_S3
+#define RGBLED_PIN        48   // YD-ESP32-S3  @GPIO 48
+#else
+#define RGBLED_PIN        35   // Atom S3 Lite @GPIO 35
+#endif
+
 // C,C++ Lib
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +46,9 @@ extern SemaphoreHandle_t xSerialMutex;
 
 #define CPU_CORE_0      0
 #define CPU_CORE_1      1
-#define APP_CORE        CPU_CORE_0
+
+#ifndef APP_CORE
+// #define APP_CORE        CPU_CORE_0
 #define APP_CORE        CPU_CORE_1
 
 #if APPLE_CORE == CPU_CORE_0
@@ -56,8 +72,6 @@ extern SemaphoreHandle_t xSerialMutex;
     #define core1_init    setup
     #define core1_main    loop
 #endif
-
-// GPIO
-#define RGBLED_PIN      48   // NEOPIXEL @GPIO 48
+#endif
 
 #endif /* COMMON_HPP */

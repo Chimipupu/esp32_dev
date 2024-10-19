@@ -10,6 +10,7 @@
  */
 
 #include "app_ftp.hpp"
+#include "app_file_system.hpp"
 
 FtpServer ftpSrv;
 static void ftp_cbk(FtpOperation ftpOperation, unsigned int freeSpace, unsigned int totalSpace);

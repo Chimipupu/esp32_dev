@@ -12,10 +12,11 @@
 #include"app_wifi.hpp"
 #include "app_wifi_inital_html.hpp"
 #include "app_ftp.hpp"
+#include "app_file_system.hpp"
 
 WebServer server(80);
 
-// FATFS
+// ファイルシステム
 const char *CONFIG_FILE = "/wifi_config.json";
 
 // 初期APのWiFi設定
@@ -53,10 +54,10 @@ WiFiConfig config;
 
 static bool loadWiFiConfig(void)
 {
-    File configFile = FFat.open(CONFIG_FILE, "r");
+    File configFile = FILE_SYSTEM.open(CONFIG_FILE, "r");
     if (!configFile)
     {
-        Serial.println("FATFSでファイルが見つかりません");
+        Serial.println("ファイルシステムでファイルが見つかりません");
         return false;
     }
 
@@ -83,10 +84,10 @@ static void saveWiFiConfig(const String &ssid, const String &password)
     doc["ssid"] = ssid;
     doc["password"] = password;
 
-    File configFile = FFat.open(CONFIG_FILE, "w");
+    File configFile = FILE_SYSTEM.open(CONFIG_FILE, "w");
     if (!configFile)
     {
-        Serial.println("FATFSで設定ファイルのオープンに失敗");
+        Serial.println("ファイルシステムで設定ファイルのオープンに失敗");
         return;
     }
 
@@ -113,10 +114,10 @@ static void setupAP(void)
 static void handleRoot(void)
 {
     if(s_html_type == INDEX){
-        File html = FFat.open("/index.html");
+        File html = FILE_SYSTEM.open("/index.html");
         server.streamFile(html, "text/html");
     } else if(s_html_type == FACTOCY_CONFIG){
-        File html = FFat.open("/factocy_config.html");
+        File html = FILE_SYSTEM.open("/factocy_config.html");
         server.streamFile(html, "text/html");
     } else if(s_html_type == STA_WIFI_CONFIG){
         server.send(200, "text/html", settingsHTML);
@@ -149,24 +150,32 @@ static void handleSave(void)
 
 static void time_show(bool type)
 {
-    if(RTC_TIME != true){
-        getLocalTime(&s_ntp_timeinfo_t);
-        Serial.printf("NTP: %04d/%02d/%02d %02d:%02d:%02d\n",
-                        s_ntp_timeinfo_t.tm_year + 1900,
-                        s_ntp_timeinfo_t.tm_mon + 1,
-                        s_ntp_timeinfo_t.tm_mday,
-                        s_ntp_timeinfo_t.tm_hour,
-                        s_ntp_timeinfo_t.tm_min,
-                        s_ntp_timeinfo_t.tm_sec);
-    }else{
-        getLocalTime(&s_rtc_timeinfo_t);
-        Serial.printf("RTC: %04d/%02d/%02d %02d:%02d:%02d\n",
-                        s_rtc_timeinfo_t.tm_year + 1900,
-                        s_rtc_timeinfo_t.tm_mon + 1,
-                        s_rtc_timeinfo_t.tm_mday,
-                        s_rtc_timeinfo_t.tm_hour,
-                        s_rtc_timeinfo_t.tm_min,
-                        s_rtc_timeinfo_t.tm_sec);
+    switch (type)
+    {
+        case NTP_TIME:
+            getLocalTime(&s_ntp_timeinfo_t);
+            Serial.printf("NTP: %04d/%02d/%02d %02d:%02d:%02d\n",
+                            s_ntp_timeinfo_t.tm_year + 1900,
+                            s_ntp_timeinfo_t.tm_mon + 1,
+                            s_ntp_timeinfo_t.tm_mday,
+                            s_ntp_timeinfo_t.tm_hour,
+                            s_ntp_timeinfo_t.tm_min,
+                            s_ntp_timeinfo_t.tm_sec);
+            break;
+
+        case RTC_TIME:
+            getLocalTime(&s_rtc_timeinfo_t);
+            Serial.printf("RTC: %04d/%02d/%02d %02d:%02d:%02d\n",
+                            s_rtc_timeinfo_t.tm_year + 1900,
+                            s_rtc_timeinfo_t.tm_mon + 1,
+                            s_rtc_timeinfo_t.tm_mday,
+                            s_rtc_timeinfo_t.tm_hour,
+                            s_rtc_timeinfo_t.tm_min,
+                            s_rtc_timeinfo_t.tm_sec);
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -212,10 +221,17 @@ void app_wifi_init(void)
 {
     time_show(RTC_TIME);
 
-    Serial.println("FATFS初期化");
-    if (!FFat.begin(true))
+    Serial.println("ファイルシステム初期化");
+
+    if (!FILE_SYSTEM.begin())
     {
-        Serial.println("工場出荷:reboot");
+        Serial.println("ファイルシステム マウント失敗");
+#if 0
+        Serial.println("ファイルシステムをフォーマット");
+        FILE_SYSTEM.format();
+
+        Serial.println("ファイルシステムのフォーマット完了、rebootします!");
+#endif
         ESP.restart();
     }
 
@@ -257,6 +273,9 @@ void app_wifi_init(void)
             server.on("/", handleRoot);
             server.begin();
             server.handleClient();
+
+            time_show(NTP_TIME);
+            time_show(RTC_TIME);
 
             // FTP Server
             app_ftp_init();

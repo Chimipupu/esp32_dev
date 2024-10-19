@@ -17,8 +17,6 @@
 #include <time.h>
 #include <ArduinoJson.h>
 #include "soc/rtc.h"
-#include "FS.h"
-#include "FFat.h"
 
 // APP
 // #include "app_wifi_inital_html.hpp"
