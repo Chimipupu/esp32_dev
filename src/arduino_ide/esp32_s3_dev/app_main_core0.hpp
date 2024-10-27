@@ -11,6 +11,9 @@
 #ifndef APP_MAIN_CORE0_HPP
 #define APP_MAIN_CORE0_HPP
 
+// FreeRTOS
+#include <task.h>
+
 // RGBLED
 #include "app_neopixel.hpp"
 

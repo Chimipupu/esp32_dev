@@ -50,5 +50,6 @@ void app_main_init_core0(void)
 void app_main_core0(void)
 {
     // Serial.println("[Core0] ... loopTask");
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    // vTaskDelay(10000 / portTICK_PERIOD_MS);
+    vTaskSuspend(NULL);
 }

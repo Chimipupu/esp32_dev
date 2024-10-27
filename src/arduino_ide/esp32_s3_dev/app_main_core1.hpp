@@ -11,6 +11,9 @@
 #ifndef APP_MAIN_CORE1_HPP
 #define APP_MAIN_CORE1_HPP
 
+// FreeRTOS
+#include <task.h>
+
 // DeepSleep
 #include "esp_sleep.h"
 #define DEEPSLEEP_TIME_US_30SEC   30ULL * 1000000ULL      // 30秒

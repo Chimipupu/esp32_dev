@@ -11,7 +11,20 @@
 
 #include "common.hpp"
 #include "app_main_core1.hpp"
+#include "app_btn.hpp"
 #include "app_neopixel.hpp"
+
+void core1BtnTask(void * parameter)
+{
+    Serial.println("[Core1] ... core1BtnTask");
+    app_wifi_init();
+
+    while (1)
+    {
+        app_btn_polling();
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+}
 
 void core1WiFiTask(void * parameter)
 {
@@ -40,6 +53,9 @@ void app_main_init_core1(void)
     Serial.begin(115200);
     Serial.println("UART初期化");
 
+    // ボタン
+    app_btn_init();
+
     // RGB LED (NeoPixel)
     app_neopixel_init();
     app_neopixel_main(16, 0, 0, 0,true, false); // red, on
@@ -48,6 +64,14 @@ void app_main_init_core1(void)
     esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
     // FreeRTOS
+    xTaskCreatePinnedToCore(core1BtnTask,     // コールバック関数ポインタ
+                            "core1BtnTask",   // タスク名
+                            4096,              // スタック
+                            NULL,              // パラメータ
+                            2,                 // 優先度(0～7、7が最優先)
+                            NULL,              // ハンドル
+                            CPU_CORE_1);       // Core0 or Core1
+
     xTaskCreatePinnedToCore(core1WiFiTask,     // コールバック関数ポインタ
                             "core1WiFiTask",   // タスク名
                             8192,              // スタック
@@ -60,5 +84,6 @@ void app_main_init_core1(void)
 void app_main_core1(void)
 {
     // Serial.println("[Core1] ... loopTask");
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    // vTaskDelay(10000 / portTICK_PERIOD_MS);
+    vTaskSuspend(NULL);
 }
