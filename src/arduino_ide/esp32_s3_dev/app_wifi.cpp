@@ -206,24 +206,21 @@ static void set_ntp_to_rtc_time(void)
 
 static void wifi_online_proc(void)
 {
-    if(s_ap_flg != true){
-        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
-    }else{
-        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
-    }
-
     if(s_ftp_flg != false)
     {
+        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
         app_ftp_main();
+    } else {
+        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
     }
 }
 
 static void wifi_off_online_proc(void)
 {
-    if(s_ap_flg != true){
-        app_neopixel_main(16, 0, 0, 0,true, false); // red, on
-    }else{
+    if(s_ap_flg != false){
         app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+    }else{
+        app_neopixel_main(16, 0, 0, 0,true, false); // red, on
     }
 }
 
@@ -344,10 +341,10 @@ void app_wifi_init(void)
  */
 bool app_wifi_main(void)
 {
-    if ((s_wifi_flag != true) && (WiFi.status() != WL_CONNECTED))
+    if ((s_wifi_flag != true) || (WiFi.status() != WL_CONNECTED))
     {
         wifi_off_online_proc();
-    }else{
+    } else {
         wifi_online_proc();
     }
 

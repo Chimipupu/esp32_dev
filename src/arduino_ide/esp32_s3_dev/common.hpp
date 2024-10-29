@@ -12,6 +12,18 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+// C,C++ Lib
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+
+// FreeRTOS
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+
+// #define FILESYSTEM_RESET
 // #define YD_ESP32_S3
 
 #ifndef ATOM_S3_LITE
@@ -28,17 +40,6 @@
 #define BUTTON_PIN        41   // Atom S3 Lite Button @GPIO 41
 #endif
 
-// C,C++ Lib
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-
-// FreeRTOS
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-
 // 割込みマスク・許可
 #define __DI            vTaskEnterCritical
 #define __EI            vTaskExitCritical
@@ -48,8 +49,6 @@
 #define __EI_ISR        portEXIT_CRITICAL_ISR
 
 extern SemaphoreHandle_t xSerialMutex;
-
-// #define FILESYSTEM_RESET
 
 #define CPU_CORE_0      0
 #define CPU_CORE_1      1

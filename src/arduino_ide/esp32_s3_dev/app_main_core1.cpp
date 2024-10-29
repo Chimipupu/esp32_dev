@@ -34,7 +34,6 @@ void core1WiFiTask(void * parameter)
     while (1)
     {
         bool wifi_flag = false;
-
         // Serial.println("[Core1] ... core1WiFiTask");
         wifi_flag = app_wifi_main();
 
@@ -43,7 +42,6 @@ void core1WiFiTask(void * parameter)
             Serial.printf("DeepSleep : %d min", (DEEPSLEEP_TIME_US / 60) / 1000000);
             esp_deep_sleep_start();
         }
-
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
