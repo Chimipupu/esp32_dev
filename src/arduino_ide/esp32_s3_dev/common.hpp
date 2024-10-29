@@ -49,8 +49,14 @@
 
 extern SemaphoreHandle_t xSerialMutex;
 
+// #define FILESYSTEM_RESET
+
 #define CPU_CORE_0      0
 #define CPU_CORE_1      1
+
+// #define ATOM_S3
+#define ATOM_S3_LITE
+// #define YD_ESP_S3
 
 #ifndef APP_CORE
 // #define APP_CORE        CPU_CORE_0

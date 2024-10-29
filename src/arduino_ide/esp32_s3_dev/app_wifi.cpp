@@ -121,13 +121,14 @@ static void setupAP(void)
 static void handleRoot(void)
 {
     if(s_html_type == INDEX){
-        File html = FILE_SYSTEM.open("/index.html");
-        server.streamFile(html, "text/html");
+        // File html = FILE_SYSTEM.open("/index.html");
+        // server.streamFile(html, "text/html");
+        server.send(200, "text/html", p_indexHTML);
     } else if(s_html_type == FACTOCY_CONFIG){
         File html = FILE_SYSTEM.open("/factocy_config.html");
         server.streamFile(html, "text/html");
     } else if(s_html_type == STA_WIFI_CONFIG){
-        server.send(200, "text/html", settingsHTML);
+        server.send(200, "text/html", p_settingsHTML);
     }
 }
 
@@ -270,14 +271,15 @@ static void sta_mode_main(void)
 
         // time_show(NTP_TIME);
         // time_show(RTC_TIME);
-
+#ifdef YD_ESP_S3
         // FTP Server
         app_ftp_init();
         s_ftp_flg = true;
-
-        // Serial.println("WiFiから切断");
-        // WiFi.disconnect();
-        // s_wifi_flag = false;
+#else
+        Serial.println("WiFiから切断");
+        WiFi.disconnect();
+        s_wifi_flag = false;
+#endif /* YD_ESP_S3 */
     } else {
         s_wifi_flag = true;
         ap_mode_main();
@@ -299,6 +301,10 @@ static void ap_mode_main(void)
     server.handleClient();
 }
 
+/**
+ * @brief WiFi アプリ初期化
+ * 
+ */
 void app_wifi_init(void)
 {
     time_show(RTC_TIME);
@@ -308,12 +314,12 @@ void app_wifi_init(void)
     if (!FILE_SYSTEM.begin())
     {
         Serial.println("ファイルシステム マウント失敗");
-#if 0
+#ifdef FILESYSTEM_RESET
         Serial.println("ファイルシステムをフォーマット");
         FILE_SYSTEM.format();
 
         Serial.println("ファイルシステムのフォーマット完了、rebootします!");
-#endif
+#endif /* FILESYSTEM_RESET */
         ESP.restart();
     }
 
@@ -330,13 +336,19 @@ void app_wifi_init(void)
     }
 }
 
+/**
+ * @brief WiFi アプリメイン
+ * 
+ * @return true WiFiオンライン
+ * @return false WiFiオフライン
+ */
 bool app_wifi_main(void)
 {
-    if(WiFi.status() == WL_CONNECTED)
+    if ((s_wifi_flag != true) && (WiFi.status() != WL_CONNECTED))
     {
-        wifi_online_proc();
-    }else{
         wifi_off_online_proc();
+    }else{
+        wifi_online_proc();
     }
 
     server.handleClient();
