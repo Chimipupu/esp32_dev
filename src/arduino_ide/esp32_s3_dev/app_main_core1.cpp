@@ -14,13 +14,15 @@
 #include "app_btn.hpp"
 #include "app_neopixel.hpp"
 
-xTaskHandle s_xCore1BtnTask;
-xTaskHandle s_xCore1WiFiTask;
+static xTaskHandle s_xCore1BtnTask;
+static xTaskHandle s_xCore1WiFiTask;
+static bool s_wifi_flag = false;
+static bool s_wifi_task= true;
 
 void core1BtnTask(void *p_parameter)
 {
     ButtonState btnstate;
-    Serial.println("[Core1] ... core1BtnTask");
+    Serial.println("[Core1] core1BtnTask");
 
     while (1)
     {
@@ -55,30 +57,34 @@ void core1BtnTask(void *p_parameter)
             default:
                 break;
         }
+
+        if(s_wifi_task != true) {
+            vTaskResume(s_xCore1WiFiTask);
+        }
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 }
 
 void core1WiFiTask(void *p_parameter)
 {
-    Serial.println("[Core1] ... core1WiFiTask");
+    Serial.println("[Core1] core1WiFiTask");
     app_wifi_init();
 
     while (1)
     {
-        bool wifi_flag = false;
-        // Serial.println("[Core1] ... core1WiFiTask");
-        wifi_flag = app_wifi_main();
+        s_wifi_flag = app_wifi_main();
 
-        if(wifi_flag != true){
+        if(s_wifi_flag != true){
 #ifdef DEEP_SLEEP_ENABLE
             // DeepSleep @DEEPSLEEP_TIME_US
             Serial.printf("DeepSleep : %d min", (DEEPSLEEP_TIME_US / 60) / 1000000);
             esp_deep_sleep_start();
 #else
-            Serial.printf("[Core1]core1WiFiTask Suspend now!");
+            Serial.println("[Core1] core1WiFiTask Suspend now!");
+            s_wifi_task = false;
             vTaskSuspend(NULL);
-            Serial.printf("[Core1]core1WiFiTask Resume now!");
+            s_wifi_task = true;
+            Serial.println("[Core1] core1WiFiTask Resume now!");
 #endif
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -106,15 +112,15 @@ void app_main_init_core1(void)
                             4096,              // スタック
                             NULL,              // パラメータ
                             2,                 // 優先度(0～7、7が最優先)
-                            NULL,              // ハンドル
+                            &s_xCore1BtnTask,  // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 
     xTaskCreatePinnedToCore(core1WiFiTask,     // コールバック関数ポインタ
                             "core1WiFiTask",   // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
-                            5,                 // 優先度(0～7、7が最優先)
-                            NULL,              // ハンドル
+                            7,                 // 優先度(0～7、7が最優先)
+                            &s_xCore1WiFiTask, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 }
 
