@@ -24,8 +24,9 @@
 #include <semphr.h>
 
 // #define FILESYSTEM_RESET
-// #define YD_ESP32_S3
+// #define DEEP_SLEEP_ENABLE
 
+// #define YD_ESP32_S3
 #ifndef ATOM_S3_LITE
 #include <M5AtomS3.h>
 #define ATOM_S3_LITE
@@ -43,10 +44,12 @@
 // 割込みマスク・許可
 #define __DI            vTaskEnterCritical
 #define __EI            vTaskExitCritical
-#define __DI_ISR_TASK   taskENTER_CRITICAL_FROM_ISR
-#define __EI_ISR_TASK   taskEXIT_CRITICAL_FROM_ISR
-#define __DI_ISR        portENTER_CRITICAL_ISR
-#define __EI_ISR        portEXIT_CRITICAL_ISR
+// #define __DI_ISR        taskENTER_CRITICAL_FROM_ISR
+// #define __EI_ISR        taskEXIT_CRITICAL_FROM_ISR
+// #define __DI_ISR        portENTER_CRITICAL_ISR
+// #define __EI_ISR        portEXIT_CRITICAL_ISR
+#define __DI_ISR        portENTER_CRITICAL
+#define __EI_ISR        portEXIT_CRITICAL
 
 extern SemaphoreHandle_t xSerialMutex;
 

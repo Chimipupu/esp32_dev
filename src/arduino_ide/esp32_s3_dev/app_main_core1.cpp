@@ -14,19 +14,52 @@
 #include "app_btn.hpp"
 #include "app_neopixel.hpp"
 
-void core1BtnTask(void * parameter)
+xTaskHandle s_xCore1BtnTask;
+xTaskHandle s_xCore1WiFiTask;
+
+void core1BtnTask(void *p_parameter)
 {
+    ButtonState btnstate;
     Serial.println("[Core1] ... core1BtnTask");
-    app_wifi_init();
 
     while (1)
     {
-        app_btn_polling();
+        app_btn_polling(btnstate);
+
+        switch (btnstate.clickCount) {
+            case 1:
+                Serial.println("シングルクリック");
+                break;
+            case 2:
+                Serial.println("ダブルクリック");
+                break;
+            case 3:
+                Serial.println("トリプルクリック");
+                break;
+            default:
+                if (btnstate.clickCount > 3) {
+                    Serial.printf("%d回クリック\n", btnstate.clickCount);
+                }
+                break;
+        }
+
+        switch (btnstate.currentPressType) {
+            case LONG_PRESS:
+                    Serial.println("長押し検出");
+                break;
+
+            case VERY_LONG_PRESS:
+                    Serial.println("超長押し検出");
+                break;
+
+            default:
+                break;
+        }
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 }
 
-void core1WiFiTask(void * parameter)
+void core1WiFiTask(void *p_parameter)
 {
     Serial.println("[Core1] ... core1WiFiTask");
     app_wifi_init();
@@ -38,9 +71,15 @@ void core1WiFiTask(void * parameter)
         wifi_flag = app_wifi_main();
 
         if(wifi_flag != true){
+#ifdef DEEP_SLEEP_ENABLE
             // DeepSleep @DEEPSLEEP_TIME_US
             Serial.printf("DeepSleep : %d min", (DEEPSLEEP_TIME_US / 60) / 1000000);
             esp_deep_sleep_start();
+#else
+            Serial.printf("[Core1]core1WiFiTask Suspend now!");
+            vTaskSuspend(NULL);
+            Serial.printf("[Core1]core1WiFiTask Resume now!");
+#endif
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

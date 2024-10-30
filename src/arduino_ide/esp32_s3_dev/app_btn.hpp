@@ -24,9 +24,10 @@
 enum PressType
 {
     NONE,
-    NORMAL_PRESS,
-    LONG_PRESS,
-    VERY_LONG_PRESS
+    NORMAL_PRESS,   // 単押し
+    MULTI_PRESS,    // 複数押し
+    LONG_PRESS,     // 長押し押し
+    VERY_LONG_PRESS // 超長押し
 };
 
 // ボタンの状態を管理する構造体
@@ -37,10 +38,10 @@ struct ButtonState
     volatile unsigned long lastClickTime;   // 最後のクリック時刻
     volatile unsigned long lastReleaseTime; // 最後のリリース時刻
     volatile bool processingClicks;         // クリック処理中フラグ
-    volatile PressType currentPressType;    // 現在の押下種別
+    volatile PressType currentPressType;    // ボタンの状態種別
 };
 
 void app_btn_init(void);
-void app_btn_polling(void);
+void app_btn_polling(ButtonState btnstate);
 
 #endif /* APP_BTN_HPP */

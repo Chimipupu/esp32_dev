@@ -24,34 +24,24 @@ void IRAM_ATTR buttonISR()
     bool currentState = digitalRead(BUTTON_PIN) == LOW;
     unsigned long currentTime = millis();
 
-    if (currentState != s_buttonState.isPressed)
-    {
+    if (currentState != s_buttonState.isPressed) {
         s_buttonState.isPressed = currentState;
-        if (currentState)
-        {
+        if (currentState) {
             if (!s_buttonState.processingClicks ||
-                (currentTime - s_buttonState.lastReleaseTime <= CLICK_TIMEOUT))
-            {
+                (currentTime - s_buttonState.lastReleaseTime <= CLICK_TIMEOUT)) {
                 s_buttonState.clickCount++;
                 s_buttonState.processingClicks = true;
-            }
-            else
-            {
+            } else {
                 s_buttonState.clickCount = 1;
             }
             s_buttonState.lastClickTime = currentTime;
             s_buttonState.currentPressType = NORMAL_PRESS;
-        }
-        else
-        {
+        } else {
             s_buttonState.lastReleaseTime = currentTime;
 
-            if (s_buttonState.currentPressType == NORMAL_PRESS)
-            {
+            if (s_buttonState.currentPressType == NORMAL_PRESS) {
                 s_buttonState.processingClicks = true;
-            }
-            else
-            {
+            } else {
                 s_buttonState.clickCount = 0;
                 s_buttonState.processingClicks = false;
             }
@@ -65,29 +55,21 @@ void IRAM_ATTR buttonISR()
  * @brief ボタンポーリング処理
  * 
  */
-void app_btn_polling(void)
+void app_btn_polling(ButtonState btnstate)
 {
-    portENTER_CRITICAL(&s_mux);
-    unsigned long currentTime = millis();
+    bool result = false;
     bool isPressed = s_buttonState.isPressed;
-    unsigned long pressTime = currentTime - s_buttonState.lastClickTime;
     PressType pressType = s_buttonState.currentPressType;
 
-    if (isPressed && pressType != VERY_LONG_PRESS)
-    {
-        if (pressTime >= VERY_LONG_PRESS_TIME && pressType != VERY_LONG_PRESS)
-        {
+    __DI_ISR(&s_mux);
+    unsigned long currentTime = millis();
+    unsigned long pressTime = currentTime - s_buttonState.lastClickTime;
+
+    if (isPressed && pressType != VERY_LONG_PRESS) {
+        if (pressTime >= VERY_LONG_PRESS_TIME && pressType != VERY_LONG_PRESS) {
             s_buttonState.currentPressType = VERY_LONG_PRESS;
-            portEXIT_CRITICAL(&s_mux);
-            Serial.println("超長押し検出");
-            return;
-        }
-        else if (pressTime >= LONG_PRESS_TIME && pressType == NORMAL_PRESS)
-        {
+        } else if (pressTime >= LONG_PRESS_TIME && pressType == NORMAL_PRESS) {
             s_buttonState.currentPressType = LONG_PRESS;
-            portEXIT_CRITICAL(&s_mux);
-            Serial.println("長押し検出");
-            return;
         }
     }
 
@@ -95,35 +77,13 @@ void app_btn_polling(void)
                                 !isPressed &&
                                 (currentTime - s_buttonState.lastReleaseTime > RESET_TIMEOUT);
 
-    if (shouldProcessClicks)
-    {
-        int clicks = s_buttonState.clickCount;
-        s_buttonState.clickCount = 0;
+    if (shouldProcessClicks) {
         s_buttonState.processingClicks = false;
-        portEXIT_CRITICAL(&s_mux);
+        s_buttonState.currentPressType = MULTI_PRESS;
+    }
 
-        switch (clicks) {
-            case 1:
-                Serial.println("シングルクリック");
-                break;
-            case 2:
-                Serial.println("ダブルクリック");
-                break;
-            case 3:
-                Serial.println("トリプルクリック");
-                break;
-            default:
-                if (clicks > 3)
-                {
-                    Serial.printf("%d回クリック\n", clicks);
-                }
-                break;
-        }
-    }
-    else
-    {
-        portEXIT_CRITICAL(&s_mux);
-    }
+    btnstate = s_buttonState;
+    __EI_ISR(&s_mux);
 }
 
 /**
