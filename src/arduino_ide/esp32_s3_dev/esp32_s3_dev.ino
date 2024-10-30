@@ -13,8 +13,10 @@
 #include "app_main_core0.hpp"
 #include "app_main_core1.hpp"
 
+portMUX_TYPE g_mux = portMUX_INITIALIZER_UNLOCKED;
+
 // CPU Core0
-void core0MainTask(void * parameter)
+void core0MainTask(void *p_parameter)
 {
     app_main_init_core0();
 

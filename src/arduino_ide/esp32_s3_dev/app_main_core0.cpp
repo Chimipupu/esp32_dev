@@ -14,7 +14,7 @@
 
 rgbled_state_t g_rgbled_state;
 
-void core0RgbLedTask(void * parameter)
+void core0RgbLedTask(void *p_parameter)
 {
     Serial.println("[Core0] ... core0RgbLedTask");
     app_neopixel_init();

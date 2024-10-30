@@ -27,41 +27,7 @@ void core1BtnTask(void *p_parameter)
     while (1)
     {
         app_btn_polling(btnstate);
-
-        switch (btnstate.clickCount) {
-            case 1:
-                Serial.println("シングルクリック");
-                break;
-            case 2:
-                Serial.println("ダブルクリック");
-                break;
-            case 3:
-                Serial.println("トリプルクリック");
-                break;
-            default:
-                if (btnstate.clickCount > 3) {
-                    Serial.printf("%d回クリック\n", btnstate.clickCount);
-                }
-                break;
-        }
-
-        switch (btnstate.currentPressType) {
-            case LONG_PRESS:
-                    Serial.println("長押し検出");
-                break;
-
-            case VERY_LONG_PRESS:
-                    Serial.println("超長押し検出");
-                break;
-
-            default:
-                break;
-        }
-
-        if(s_wifi_task != true) {
-            vTaskResume(s_xCore1WiFiTask);
-        }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 
@@ -83,8 +49,6 @@ void core1WiFiTask(void *p_parameter)
             Serial.println("[Core1] core1WiFiTask Suspend now!");
             s_wifi_task = false;
             vTaskSuspend(NULL);
-            s_wifi_task = true;
-            Serial.println("[Core1] core1WiFiTask Resume now!");
 #endif
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);

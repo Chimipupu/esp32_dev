@@ -11,8 +11,7 @@
 
 #include "app_btn.hpp"
 
-ButtonState s_buttonState = {false, 0, 0, 0, false, NONE};
-portMUX_TYPE s_mux = portMUX_INITIALIZER_UNLOCKED;
+ButtonState s_buttonState = {false, 0, 0, 0, 0, false, NONE};
 
 /**
  * @brief ボタン割り込みハンドラ
@@ -20,7 +19,7 @@ portMUX_TYPE s_mux = portMUX_INITIALIZER_UNLOCKED;
  */
 void IRAM_ATTR buttonISR()
 {
-    __DI_ISR(&s_mux);
+    __DI_ISR(&g_mux);
     bool currentState = digitalRead(BUTTON_PIN) == LOW;
     unsigned long currentTime = millis();
 
@@ -48,7 +47,7 @@ void IRAM_ATTR buttonISR()
             s_buttonState.currentPressType = NONE;
         }
     }
-    __EI_ISR(&s_mux);
+    __EI_ISR(&g_mux);
 }
 
 /**
@@ -57,19 +56,24 @@ void IRAM_ATTR buttonISR()
  */
 void app_btn_polling(ButtonState btnstate)
 {
-    bool result = false;
-    bool isPressed = s_buttonState.isPressed;
-    PressType pressType = s_buttonState.currentPressType;
+    __DI(&g_mux);
 
-    __DI_ISR(&s_mux);
     unsigned long currentTime = millis();
+    bool isPressed = s_buttonState.isPressed;
     unsigned long pressTime = currentTime - s_buttonState.lastClickTime;
+    PressType pressType = s_buttonState.currentPressType;
 
     if (isPressed && pressType != VERY_LONG_PRESS) {
         if (pressTime >= VERY_LONG_PRESS_TIME && pressType != VERY_LONG_PRESS) {
             s_buttonState.currentPressType = VERY_LONG_PRESS;
+            __EI(&g_mux);
+            Serial.println("超長押し検出");
+            return;
         } else if (pressTime >= LONG_PRESS_TIME && pressType == NORMAL_PRESS) {
             s_buttonState.currentPressType = LONG_PRESS;
+            __EI(&g_mux);
+            Serial.println("長押し検出");
+            return;
         }
     }
 
@@ -78,12 +82,35 @@ void app_btn_polling(ButtonState btnstate)
                                 (currentTime - s_buttonState.lastReleaseTime > RESET_TIMEOUT);
 
     if (shouldProcessClicks) {
+        uint32_t clicks = s_buttonState.clickCount;
+        s_buttonState.lastclickCount = s_buttonState.clickCount;
+        s_buttonState.clickCount = 0;
         s_buttonState.processingClicks = false;
-        s_buttonState.currentPressType = MULTI_PRESS;
-    }
+        btnstate = s_buttonState;
+        // s_buttonState.currentPressType = MULTI_PRESS;
+        __EI(&g_mux);
 
-    btnstate = s_buttonState;
-    __EI_ISR(&s_mux);
+        switch (clicks) {
+            case 1:
+                Serial.println("シングルクリック");
+                break;
+            case 2:
+                Serial.println("ダブルクリック");
+                break;
+            case 3:
+                Serial.println("トリプルクリック");
+                break;
+            default:
+                if (clicks > 3)
+                {
+                    Serial.printf("%d回クリック\n", clicks);
+                }
+                break;
+        }
+    }else{
+        btnstate = s_buttonState;
+        __EI(&g_mux);
+    }
 }
 
 /**

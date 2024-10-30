@@ -34,12 +34,15 @@ enum PressType
 struct ButtonState
 {
     volatile bool isPressed;                // 現在のボタン状態
-    volatile int clickCount;                // クリック回数
-    volatile unsigned long lastClickTime;   // 最後のクリック時刻
-    volatile unsigned long lastReleaseTime; // 最後のリリース時刻
+    volatile uint32_t clickCount;           // クリック回数
+    volatile uint32_t lastclickCount;       // 最後のクリック回数
+    volatile uint32_t lastClickTime;        // 最後のクリック時刻
+    volatile uint32_t lastReleaseTime;      // 最後のリリース時刻
     volatile bool processingClicks;         // クリック処理中フラグ
     volatile PressType currentPressType;    // ボタンの状態種別
 };
+
+extern portMUX_TYPE g_mux;
 
 void app_btn_init(void);
 void app_btn_polling(ButtonState btnstate);

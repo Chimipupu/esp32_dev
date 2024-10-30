@@ -192,12 +192,14 @@ static void set_ntp_to_rtc_time(void)
     char timeStr[100], rtcStr[100];
 
     Serial.println("NTPとRTCを同期開始");
-    strftime(timeStr, sizeof(timeStr), "NTP: %Y/%m/%d %H:%M:%S", &s_ntp_timeinfo_t);
 
+    __DI(&g_mux);
+    strftime(timeStr, sizeof(timeStr), "NTP: %Y/%m/%d %H:%M:%S", &s_ntp_timeinfo_t);
     time_t now;
     time(&now);
     struct timeval tv = {.tv_sec = now, .tv_usec = 0};
     settimeofday(&tv, NULL);
+    __EI(&g_mux);
 
     Serial.println("NTPとRTCを同期完了");
     time_show(NTP_TIME);
@@ -255,8 +257,10 @@ static void sta_mode_main(void)
         Serial.print("WiFi MAC addr : ");
         Serial.println(WiFi.macAddress());
 
+        Serial.println("NTPサーバーに接続...");
+        // __DI(&g_mux);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-        Serial.println("NTPサーバーに接続中...");
+        // __EI(&g_mux);
 
         set_ntp_to_rtc_time();
 

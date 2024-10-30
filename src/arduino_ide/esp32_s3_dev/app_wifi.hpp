@@ -30,6 +30,8 @@ struct WiFiConfig
     String password;
 };
 
+extern portMUX_TYPE g_mux;
+
 void app_wifi_init(void);
 bool app_wifi_main(void);
 

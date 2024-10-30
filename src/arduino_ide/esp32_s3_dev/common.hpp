@@ -42,14 +42,14 @@
 #endif
 
 // 割込みマスク・許可
-#define __DI            vTaskEnterCritical
-#define __EI            vTaskExitCritical
+// #define __DI            vTaskEnterCritical
+// #define __EI            vTaskExitCritical
+#define __DI            portENTER_CRITICAL
+#define __EI            portEXIT_CRITICAL
 // #define __DI_ISR        taskENTER_CRITICAL_FROM_ISR
 // #define __EI_ISR        taskEXIT_CRITICAL_FROM_ISR
-// #define __DI_ISR        portENTER_CRITICAL_ISR
-// #define __EI_ISR        portEXIT_CRITICAL_ISR
-#define __DI_ISR        portENTER_CRITICAL
-#define __EI_ISR        portEXIT_CRITICAL
+#define __DI_ISR        portENTER_CRITICAL_ISR
+#define __EI_ISR        portEXIT_CRITICAL_ISR
 
 extern SemaphoreHandle_t xSerialMutex;
 
