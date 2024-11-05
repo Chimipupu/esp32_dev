@@ -270,8 +270,6 @@ static void sta_mode_main(void)
         server.begin();
         server.handleClient();
 
-        // time_show(NTP_TIME);
-        // time_show(RTC_TIME);
 #ifdef YD_ESP_S3
         // FTP Server
         app_ftp_init();
