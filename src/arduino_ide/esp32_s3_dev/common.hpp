@@ -48,6 +48,7 @@
 #define __DI_ISR        portENTER_CRITICAL_ISR
 #define __EI_ISR        portEXIT_CRITICAL_ISR
 
+extern portMUX_TYPE g_mux;
 extern SemaphoreHandle_t xSerialMutex;
 
 #define CPU_CORE_0      0
@@ -91,6 +92,7 @@ extern "C"
     static inline void safeSerialPrintf(const char *format, ...)
     {
         if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
+            __DI(&g_mux);
             va_list args;
             va_start(args, format);
 
@@ -149,6 +151,7 @@ extern "C"
                 }
             }
             va_end(args);
+            __EI(&g_mux);
             xSemaphoreGive(xSerialMutex);
         } else {
             Serial.println("Failed to acquire mutex!");
