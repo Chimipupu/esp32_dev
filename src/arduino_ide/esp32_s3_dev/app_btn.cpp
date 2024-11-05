@@ -67,12 +67,12 @@ void app_btn_polling(ButtonState btnstate)
         if (pressTime >= VERY_LONG_PRESS_TIME && pressType != VERY_LONG_PRESS) {
             s_buttonState.currentPressType = VERY_LONG_PRESS;
             __EI(&g_mux);
-            Serial.println("超長押し検出");
+            DEBUG_PRINTF_RTOS("超長押し検出\n");
             return;
         } else if (pressTime >= LONG_PRESS_TIME && pressType == NORMAL_PRESS) {
             s_buttonState.currentPressType = LONG_PRESS;
             __EI(&g_mux);
-            Serial.println("長押し検出");
+            DEBUG_PRINTF_RTOS("長押し検出\n");
             return;
         }
     }
@@ -92,18 +92,18 @@ void app_btn_polling(ButtonState btnstate)
 
         switch (clicks) {
             case 1:
-                Serial.println("シングルクリック");
+                DEBUG_PRINTF_RTOS("シングルクリック\n");
                 break;
             case 2:
-                Serial.println("ダブルクリック");
+                DEBUG_PRINTF_RTOS("ダブルクリック\n");
                 break;
             case 3:
-                Serial.println("トリプルクリック");
+                DEBUG_PRINTF_RTOS("トリプルクリック\n");
                 break;
             default:
                 if (clicks > 3)
                 {
-                    Serial.printf("%d回クリック\n", clicks);
+                    DEBUG_PRINTF_RTOS("%d回クリック\n", clicks);
                 }
                 break;
         }

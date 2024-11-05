@@ -16,7 +16,7 @@ rgbled_state_t g_rgbled_state;
 
 void core0RgbLedTask(void *p_parameter)
 {
-    Serial.println("[Core0] ... core0RgbLedTask");
+    DEBUG_PRINTF_RTOS("[Core0] ... core0RgbLedTask\n");
     app_neopixel_init();
 
     // g_rgbled_state.red = 0;
@@ -49,7 +49,7 @@ void app_main_init_core0(void)
 
 void app_main_core0(void)
 {
-    // Serial.println("[Core0] ... loopTask");
+    // DEBUG_PRINTF_RTOS("[Core0] ... loopTask\n");
     // vTaskDelay(10000 / portTICK_PERIOD_MS);
     vTaskSuspend(NULL);
 }

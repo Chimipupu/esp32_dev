@@ -62,7 +62,7 @@ static bool loadWiFiConfig(void)
     File configFile = FILE_SYSTEM.open(CONFIG_FILE, "r");
     if (!configFile)
     {
-        Serial.println("ファイルシステムでファイルが見つかりません");
+        DEBUG_PRINTF_RTOS("ファイルシステムでファイルが見つかりません\n");
         return false;
     }
 
@@ -72,13 +72,13 @@ static bool loadWiFiConfig(void)
 
     if (error)
     {
-        Serial.println("設定の解析に失敗しました");
+        DEBUG_PRINTF_RTOS("設定の解析に失敗しました\n");
         return false;
     }
 
     config.ssid = doc["ssid"].as<String>();
     config.password = doc["password"].as<String>();
-    Serial.println("WiFi設定を読み込みました");
+    DEBUG_PRINTF_RTOS("WiFi設定を読み込みました\n");
     return true;
 }
 
@@ -92,30 +92,26 @@ static void saveWiFiConfig(const String &ssid, const String &password)
     File configFile = FILE_SYSTEM.open(CONFIG_FILE, "w");
     if (!configFile)
     {
-        Serial.println("ファイルシステムで設定ファイルのオープンに失敗");
+        DEBUG_PRINTF_RTOS("ファイルシステムで設定ファイルのオープンに失敗\n");
         return;
     }
 
     serializeJson(doc, configFile);
     configFile.close();
-    Serial.println("WiFi設定を保存しました");
+    DEBUG_PRINTF_RTOS("WiFi設定を保存しました\n");
 }
 
 static void setupAP(void)
 {
     WiFi.mode(WIFI_AP);
-    Serial.println("APモードを開始します");
+    DEBUG_PRINTF_RTOS("APモードを開始します\n");
     WiFi.softAP(AP_SSID, AP_PASSWORD);
 
-    Serial.print("AP SSID: ");
-    Serial.println(AP_SSID);
-    Serial.print("AP Password: ");
-    Serial.println(AP_PASSWORD);
+    DEBUG_PRINTF_RTOS("AP SSID : %s\n", AP_SSID);
+    DEBUG_PRINTF_RTOS("AP Password : %s\n", AP_PASSWORD);
 
-    Serial.print("AP Web Server IP addr: ");
-    Serial.println(WiFi.softAPIP());
-    Serial.print("WiFi MAC addr : ");
-    Serial.println(WiFi.macAddress());
+    DEBUG_PRINTF_RTOS("AP Web Server IP addr : %s\n", WiFi.softAPIP());
+    DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", WiFi.macAddress());
 }
 
 static void handleRoot(void)
@@ -139,13 +135,11 @@ static void handleSave(void)
         String ssid = server.arg("ssid");
         String password = server.arg("password");
 
-        Serial.print("STA SSID: ");
-        Serial.println(ssid);
-        Serial.print("STA Password: ");
-        Serial.println(password);
+        DEBUG_PRINTF_RTOS("STA SSID : %s\n", ssid);
+        DEBUG_PRINTF_RTOS("STA Password : %s\n", password);
 
         saveWiFiConfig(ssid, password);
-        Serial.print("STA SSID & Password Saved! Now on reboot...");
+        DEBUG_PRINTF_RTOS("STA SSID & Password Saved! Now on reboot...\n");
         server.send(200, "text/plain", "設定を保存しました。デバイスを再起動します。");
         delay(2000);
 
@@ -162,7 +156,7 @@ static void time_show(bool type)
     {
         case NTP_TIME:
             getLocalTime(&s_ntp_timeinfo_t);
-            Serial.printf("NTP: %04d/%02d/%02d %02d:%02d:%02d\n",
+            DEBUG_PRINTF_RTOS("NTP: %04d/%02d/%02d %02d:%02d:%02d\n",
                             s_ntp_timeinfo_t.tm_year + 1900,
                             s_ntp_timeinfo_t.tm_mon + 1,
                             s_ntp_timeinfo_t.tm_mday,
@@ -173,7 +167,7 @@ static void time_show(bool type)
 
         case RTC_TIME:
             getLocalTime(&s_rtc_timeinfo_t);
-            Serial.printf("RTC: %04d/%02d/%02d %02d:%02d:%02d\n",
+            DEBUG_PRINTF_RTOS("RTC: %04d/%02d/%02d %02d:%02d:%02d\n",
                             s_rtc_timeinfo_t.tm_year + 1900,
                             s_rtc_timeinfo_t.tm_mon + 1,
                             s_rtc_timeinfo_t.tm_mday,
@@ -191,7 +185,7 @@ static void set_ntp_to_rtc_time(void)
 {
     char timeStr[100], rtcStr[100];
 
-    Serial.println("NTPとRTCを同期開始");
+    DEBUG_PRINTF_RTOS("NTPとRTCを同期開始\n");
 
     __DI(&g_mux);
     strftime(timeStr, sizeof(timeStr), "NTP: %Y/%m/%d %H:%M:%S", &s_ntp_timeinfo_t);
@@ -201,7 +195,7 @@ static void set_ntp_to_rtc_time(void)
     settimeofday(&tv, NULL);
     __EI(&g_mux);
 
-    Serial.println("NTPとRTCを同期完了");
+    DEBUG_PRINTF_RTOS("NTPとRTCを同期完了\n");
     time_show(NTP_TIME);
     time_show(RTC_TIME);
 }
@@ -228,36 +222,32 @@ static void wifi_off_online_proc(void)
 
 static void sta_mode_main(void)
 {
-    Serial.println("STAモードで接続を試みます");
+    DEBUG_PRINTF_RTOS("STAモードで接続を試みます\n");
     WiFi.mode(WIFI_STA);
-    Serial.print("STA SSID: ");
-    Serial.println(config.ssid.c_str());
-    Serial.print("STA Password: ");
-    Serial.println(config.password.c_str());
+    DEBUG_PRINTF_RTOS("STA SSID : %s\n", config.ssid.c_str());
+    DEBUG_PRINTF_RTOS("STA Password : %s\n", config.password.c_str());
     WiFi.begin(config.ssid.c_str(), config.password.c_str());
 
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 30)
     {
         delay(500);
-        Serial.print(".");
+        DEBUG_PRINTF_RTOS(".");
         attempts++;
     }
 
-    Serial.print("\n");
+    DEBUG_PRINTF_RTOS("\n");
 
     if (WiFi.status() == WL_CONNECTED)
     {
         s_wifi_flag = true;
         app_neopixel_main(0, 16, 0, 0,true, false); // green, on
 
-        Serial.println("\nWiFi接続完了!");
-        Serial.print("IP addr : ");
-        Serial.println(WiFi.localIP());
-        Serial.print("WiFi MAC addr : ");
-        Serial.println(WiFi.macAddress());
+        DEBUG_PRINTF_RTOS("\nWiFi接続完了!\n");
+        DEBUG_PRINTF_RTOS("IP addr : %s\n", WiFi.localIP());
+        DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", WiFi.macAddress());
 
-        Serial.println("NTPサーバーに接続...");
+        DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         // __DI(&g_mux);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         // __EI(&g_mux);
@@ -275,7 +265,7 @@ static void sta_mode_main(void)
         app_ftp_init();
         s_ftp_flg = true;
 #else
-        Serial.println("WiFiから切断");
+        DEBUG_PRINTF_RTOS("WiFiから切断\n");
         WiFi.disconnect();
         s_wifi_flag = false;
 #endif /* YD_ESP_S3 */
@@ -292,7 +282,7 @@ static void ap_mode_main(void)
 
     setupAP();
 
-    Serial.println("Web鯖 begin...");
+    DEBUG_PRINTF_RTOS("Web鯖 begin...\n");
     s_html_type = STA_WIFI_CONFIG;
     server.on("/", handleRoot);
     server.on("/save", HTTP_POST, handleSave);
@@ -308,21 +298,21 @@ void app_wifi_init(void)
 {
     time_show(RTC_TIME);
 
-    Serial.println("ファイルシステム初期化");
+    DEBUG_PRINTF_RTOS("ファイルシステム初期化\n");
 
     if (!FILE_SYSTEM.begin())
     {
-        Serial.println("ファイルシステム マウント失敗");
+        DEBUG_PRINTF_RTOS("ファイルシステム マウント失敗\n");
 #ifdef FILESYSTEM_RESET
-        Serial.println("ファイルシステムをフォーマット");
+        DEBUG_PRINTF_RTOS("ファイルシステムをフォーマット\n");
         FILE_SYSTEM.format();
 
-        Serial.println("ファイルシステムのフォーマット完了、rebootします!");
+        DEBUG_PRINTF_RTOS("ファイルシステムのフォーマット完了、rebootします!\n");
 #endif /* FILESYSTEM_RESET */
         ESP.restart();
     }
 
-    Serial.println("WiFi設定を読み込み中...");
+    DEBUG_PRINTF_RTOS("WiFi設定を読み込み中...\n");
 
     if (loadWiFiConfig() && config.ssid.length() > 0)
     {

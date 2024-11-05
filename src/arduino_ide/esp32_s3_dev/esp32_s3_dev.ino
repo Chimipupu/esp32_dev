@@ -13,6 +13,7 @@
 #include "app_main_core0.hpp"
 #include "app_main_core1.hpp"
 
+SemaphoreHandle_t xSerialMutex;
 portMUX_TYPE g_mux = portMUX_INITIALIZER_UNLOCKED;
 
 // CPU Core0
@@ -32,6 +33,7 @@ void core1_init(void)
 {
     app_main_init_core1();
 
+#if 0
     xTaskCreatePinnedToCore(core0MainTask,     // コールバック関数ポインタ
                             "core0MainTask",   // タスク名
                             8192,              // スタック
@@ -39,6 +41,7 @@ void core1_init(void)
                             2,                 // 優先度(0～7、7が最優先)
                             NULL,              // ハンドル
                             CPU_CORE_0);       // Core0 or Core1
+#endif
 }
 
 void core1_main(void)

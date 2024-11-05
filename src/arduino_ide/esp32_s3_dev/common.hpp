@@ -23,6 +23,7 @@
 #include <task.h>
 #include <semphr.h>
 
+#define USE_ESPNOW_MODE
 // #define FILESYSTEM_RESET
 // #define DEEP_SLEEP_ENABLE
 
@@ -42,12 +43,8 @@
 #endif
 
 // 割込みマスク・許可
-// #define __DI            vTaskEnterCritical
-// #define __EI            vTaskExitCritical
 #define __DI            portENTER_CRITICAL
 #define __EI            portEXIT_CRITICAL
-// #define __DI_ISR        taskENTER_CRITICAL_FROM_ISR
-// #define __EI_ISR        taskEXIT_CRITICAL_FROM_ISR
 #define __DI_ISR        portENTER_CRITICAL_ISR
 #define __EI_ISR        portEXIT_CRITICAL_ISR
 
@@ -86,5 +83,78 @@ extern SemaphoreHandle_t xSerialMutex;
     #define core1_main    loop
 #endif
 #endif
+
+#define DEBUG_PRINTF_RTOS   safeSerialPrintf
+#ifdef DEBUG_PRINTF_RTOS
+extern "C"
+{
+    static inline void safeSerialPrintf(const char *format, ...)
+    {
+        if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
+            va_list args;
+            va_start(args, format);
+
+            for (const char *p = format; *p != '\0'; p++) {
+                if (*p == '%') {
+                    p++;  // '%'の次の文字を見る
+                    int width = 0;
+                    int precision = -1;
+
+                    // 幅の取得
+                    while (*p >= '0' && *p <= '9') {
+                        width = width * 10 + (*p - '0');
+                        p++;
+                    }
+
+                    // 精度の取得
+                    if (*p == '.') {
+                        p++;
+                        precision = 0;
+                        while (*p >= '0' && *p <= '9') {
+                            precision = precision * 10 + (*p - '0');
+                            p++;
+                        }
+                    }
+
+                    // フォーマット指定子に基づいて処理
+                    switch (*p) {
+                        case 'd':  // 整数
+                            Serial.print(va_arg(args, int));
+                            break;
+                        case 'f':  // 浮動小数点数（float）
+                        case 'l':  // 'l' は無視
+                        case 'F':  // 浮動小数点数（float、大文字）
+                            Serial.print(va_arg(args, double), (precision >= 0) ? precision : 2);
+                            break;
+                        case 's':  // 文字列
+                            Serial.print(va_arg(args, char*));
+                            break;
+                        case 'c':  // 文字
+                            Serial.print((char)va_arg(args, int));
+                            break;
+                        case 'x':  // 16進数（小文字）
+                        case 'X':  // 16進数（大文字）
+                            Serial.print(va_arg(args, int), HEX);
+                            break;
+                        default:  // 他のフォーマット指定子はそのまま表示
+                            Serial.print(*p);
+                            break;
+                    }
+                } else if (*p == '\r' || *p == '\n') {
+                    // 改行シーケンスの処理
+                    Serial.println(); // 改行
+                } else {
+                    // '%'でない文字はそのまま表示
+                    Serial.print(*p);
+                }
+            }
+            va_end(args);
+            xSemaphoreGive(xSerialMutex);
+        } else {
+            Serial.println("Failed to acquire mutex!");
+        }
+    }
+}
+#endif /* DEBUG_PRINTF_RTOS */
 
 #endif /* COMMON_HPP */
