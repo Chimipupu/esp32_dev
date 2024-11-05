@@ -1,61 +1,51 @@
-# ESP32-S3 FreeRTOS F/W by ちみ
-ESP32-S3 FreeRTOS F/W by ちみ🥳
+# 📍ESP32評価F/W by ちみ
+RP2040評価F/W 個人開発リポジトリ🥳
+- 📍CPU ... ESP32-S3
+  - 📍CPU0 ... Xtensa LX7
+  - 📍CPU1 ... Xtensa LX7
+- 📍OS ... FreeRTOS
+  - 📍CPU0 ... ✅FreeRTOS(搭載済み)
+  - 📍CPU1 ... ✅FreeRTOS(搭載済み)
+****
 
-## ✅実装した機能
+# 開発環境
+[開発環境の詳細(esp32_dev.md)🔗](/doc/esp32_dev.md)
+
+- 📍[Arduino IDE v2.33](https://github.com/arduino/arduino-ide/releases/tag/2.3.3)
+  - [Arduino core for the esp32 v3.0.7🔗](https://github.com/espressif/arduino-esp32/releases/tag/3.0.7)
+- 📍基板
+  - [VCC-GND YD-ESP32-S3🔗](https://github.com/vcc-gnd/YD-ESP32-S3)
+  - [M5Stack Atom S3 Lite🔗](https://docs.m5stack.com/en/core/AtomS3%20Lite)
+
+****
+
+## 📍F/W実装済み
 - ✅Core0 ... ドライバコアCPU
   - ✅FreeRTOS
     - ✅loopTask
       - ドライバ関連
-
 - ✅Core1 ... アプリコアCPU
-  - ✅割込み
-    - ✅ボタンIRQ
-      - `ボタン単押し`:ボタン一回押しを検知
-      - `ボタン複数押し`:短時間に複数回ボタン押しを検知
-      - `ボタン長押し`:ボタン長押しを検知（1000ms = 1s）
-      - `ボタン超長押し`:ボタン長押しを検知（3000ms = 2s）
-    - ✅FreeRTOS
-      - ✅loopTask
-        - ✅DeepSleep : TBD
-        - TBD
-      - ✅WiFiタスク
-          - ✅AP
-            - ✅HTTP : HTMLでSTAのSSIDとパスワード入力受け
-          - ✅STA
-            - ✅FTP : FATFSでフラッシュにファイルをR/W
-            - ✅NTP : RTCと同期
-            - ✅HTTP : HTMLに各種データのI/O
-          - ✅RGB LED : WiFiの状態に応じて色表示
-            - ✅赤 : オフライン状態（WiFi未接続）
-            - ✅緑 : オンライン状態（STAモード）
-            - ✅青 : APモード
-            - ✅白 : TODO(ESP-NOWで起動中)
-            - ✅紫 : TODO(エラー状態)
+  - ✅FreeRTOS
+    - ✅loopTask
+      - ✅DeepSleep : TBD
+      - TBD
+    - ✅WiFiタスク
+      - ✅AP
+        - ✅HTTP : HTMLでSTAのSSIDとパスワード入力受け
+      - ✅STA
+        - ✅FTP : FATFSでフラッシュにファイルをR/W
+        - ✅NTP : RTCと同期
+        - ✅HTTP : HTMLに各種データのI/O
+      - ✅RGB LED : WiFiの状態に応じて色表示
+        - ✅赤 : オフライン状態（WiFi未接続）
+        - ✅緑 : オンライン状態（STAモード）
+        - ✅青 : APモード
+        - ✅白 : TODO(ESP-NOWで起動中)
+        - ✅紫 : TODO(エラー状態)
 
-## 🛠️TBD
-- 🛠️タイマ⏰ ... インターバル⏰とワンショットタイマ⏰ほしい
-- 🛠️アプリ追加 ... I2C、SPI、PIO、スリープ機能
-- 🛠️ESP NOW ... デバイス同士で通信するとき
-- 🛠️WDT🐶 ... 最後にWDTで番犬わんわんさせる
-- 🛠️PSRAM ... MBの大容量なヒープ領域
-
-## 🤖開発基板
-[VCC-GND YD-ESP32-S3]
-
-https://github.com/vcc-gnd/YD-ESP32-S3
-
-- 機能
-  - `N16R8`
-    - フラッシュ : 16 MB
-    - PSRAM : 8 MB
-    - SRAM : 512 KB
-  - `WS2812` ... GPIO 48
-  - `CH343` ... UART to USB
-  - GPIO ... x45
-  - SPI ... x4ch
-  - UART ... x3ch
-  - I2C ... x2ch
-  - I2C ... x2ch
-  - CAN(TWAI)  ... x2ch
-
-![](https://github.com/vcc-gnd/YD-ESP32-S3/raw/main/IMG/img11.jpg)
+- ✅割込み
+  - ✅ボタンIRQ
+    - `ボタン単押し`:ボタン一回押しを検知
+    - `ボタン複数押し`:短時間に複数回ボタン押しを検知
+    - `ボタン長押し`:ボタン長押しを検知（1000ms = 1s）
+    - `ボタン超長押し`:ボタン長押しを検知（3000ms = 2s）
