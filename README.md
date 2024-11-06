@@ -1,11 +1,16 @@
 # 📍ESP32評価F/W by ちみ
-RP2040評価F/W 個人開発リポジトリ🥳
+ESP32評価F/W 個人開発リポジトリ🥳
+
+
 - 📍CPU ... ESP32-S3
   - 📍CPU0 ... Xtensa LX7
   - 📍CPU1 ... Xtensa LX7
 - 📍OS ... FreeRTOS
   - 📍CPU0 ... ✅FreeRTOS(搭載済み)
   - 📍CPU1 ... ✅FreeRTOS(搭載済み)
+- 🛜WiFi(@2.4GHz)
+- 🛜Bluetooth
+- 🛜ESP-NOW
 
 ![](/doc/espnow_req_res.png)
 
@@ -17,8 +22,9 @@ RP2040評価F/W 個人開発リポジトリ🥳
 - 📍[Arduino IDE v2.33](https://github.com/arduino/arduino-ide/releases/tag/2.3.3)
   - [Arduino core for the esp32 v3.0.7🔗](https://github.com/espressif/arduino-esp32/releases/tag/3.0.7)
 - 📍基板
-  - [VCC-GND YD-ESP32-S3🔗](https://github.com/vcc-gnd/YD-ESP32-S3)
-  - [M5Stack Atom S3 Lite🔗](https://docs.m5stack.com/en/core/AtomS3%20Lite)
+  - ESP32-S3
+    - [VCC-GND YD-ESP32-S3🔗](https://github.com/vcc-gnd/YD-ESP32-S3)
+    - [M5Stack Atom S3 Lite🔗](https://docs.m5stack.com/en/core/AtomS3%20Lite)
 
 ****
 
@@ -32,7 +38,7 @@ RP2040評価F/W 個人開発リポジトリ🥳
     - ✅loopTask
       - ✅DeepSleep : TBD
       - TBD
-    - ✅ESPNowタスク🛜
+    - ✅ESP-NOWタスク🛜
       - ✅送信、受信🛜
         - ✅ユニキャスト🛜
         - ✅ブロードキャスト🛜
@@ -57,4 +63,4 @@ RP2040評価F/W 個人開発リポジトリ🥳
     - `ボタン単押し`:ボタン一回押しを検知
     - `ボタン複数押し`:短時間に複数回ボタン押しを検知
     - `ボタン長押し`:ボタン長押しを検知（1000ms = 1s）
-    - `ボタン超長押し`:ボタン長押しを検知（3000ms = 2s）
+    - `ボタン超長押し`:ボタン長押しを検知（3000ms = 3s）
