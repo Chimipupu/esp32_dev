@@ -250,6 +250,8 @@ static void sta_mode_main(void)
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         // __DI(&g_mux);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         // __EI(&g_mux);
 
         set_ntp_to_rtc_time();
@@ -290,6 +292,25 @@ static void ap_mode_main(void)
     server.handleClient();
 }
 
+void app_wifi_scan(void)
+{
+    DEBUG_PRINTF_RTOS("WiFi scan...\n");
+    uint8_t network_cnt = WiFi.scanNetworks();
+
+    if (network_cnt == 0) {
+        DEBUG_PRINTF_RTOS("no WiFi network\n");
+    } else {
+        DEBUG_PRINTF_RTOS("found %d WiFi network\n", network_cnt);
+        for (uint8_t i = 0; i < network_cnt; ++i) {
+            DEBUG_PRINTF_RTOS("[WiFi Network No.%d]\n", i);
+            String ssid = WiFi.SSID(i);
+            DEBUG_PRINTF_RTOS("[SSID:%s] [RSSI:%d dBm] [Ch:%d]\n", ssid.c_str(), WiFi.RSSI(i), WiFi.channel(i));
+        }
+    }
+
+    DEBUG_PRINTF_RTOS("");
+}
+
 /**
  * @brief WiFi アプリ初期化
  * 
@@ -312,7 +333,10 @@ void app_wifi_init(void)
         ESP.restart();
     }
 
-    DEBUG_PRINTF_RTOS("WiFi設定を読み込み中...\n");
+    DEBUG_PRINTF_RTOS("WiFiをスキャン中...\n");
+    app_wifi_scan();
+
+    DEBUG_PRINTF_RTOS("WiFi設定をファイルシステムから読み込み中...\n");
 
     if (loadWiFiConfig() && config.ssid.length() > 0)
     {

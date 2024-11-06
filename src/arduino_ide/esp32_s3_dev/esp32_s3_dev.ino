@@ -17,7 +17,7 @@ SemaphoreHandle_t xSerialMutex;
 portMUX_TYPE g_mux = portMUX_INITIALIZER_UNLOCKED;
 
 // CPU Core0
-void core0MainTask(void *p_parameter)
+void vTaskCore0Main(void *p_parameter)
 {
     app_main_init_core0();
 
@@ -34,8 +34,8 @@ void core1_init(void)
     app_main_init_core1();
 
 #if 0
-    xTaskCreatePinnedToCore(core0MainTask,     // コールバック関数ポインタ
-                            "core0MainTask",   // タスク名
+    xTaskCreatePinnedToCore(vTaskCore0Main,     // コールバック関数ポインタ
+                            "vTaskCore0Main",   // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
                             2,                 // 優先度(0～7、7が最優先)

@@ -22,8 +22,8 @@
 
 #include "common.hpp"
 
-// #define ESP_NOW_TX
-#define ESP_NOW_RX
+#define ESP_NOW_TX
+// #define ESP_NOW_RX
 
 typedef enum {
     TX_NONE = 0x00,
@@ -35,7 +35,7 @@ typedef enum {
 
 extern portMUX_TYPE g_mux;
 
-void app_espnow_main(void);
 void app_espnow_init(void);
+bool app_espnow_main(void);
 
 #endif /* APP_ESP_NOW_HPP */

@@ -10,44 +10,40 @@
  */
 
 #include "app_esp_now.hpp"
+#include "app_wifi.hpp"
+#include "app_neopixel.hpp"
 
 esp_now_peer_info_t s_peer_info;
 esp_now_send_status_t s_tx_status;
-
 e_esp_now_tx_type s_tx_data_type = TX_NONE;
-
+static bool s_is_espnow_proc = true;
+#ifdef ESP_NOW_TX
+static bool s_is_init_tx = true;
+#endif /* ESP_NOW_TX */
 static bool s_is_broadcat_data = false;
 static bool s_is_rx_data = false;
-
 static bool s_is_init_broadcat = false;
-
 static bool s_is_unicast_peer = false;
 static bool s_is_unicast_data = false;
 static bool s_is_unicast_res = false;
-
 static uint8_t s_rx_data_len = 0;
 static uint8_t s_rx_data_buf[250] = {0};
-
 static uint8_t s_tx_data_len = 0;
 static uint8_t s_tx_data_buf[250] = {0};
-
 static uint8_t s_my_mac_addr[6] = {0};
 static uint8_t s_slave_mac_addr[6] = {0};
 static uint8_t s_src_mac_addr[6] = {0};
 static uint8_t s_des_mac_addr[6] = {0};
-
 static char s_my_mac_str_buf[18] = {0};
 static char s_slave_mac_str_buf[18] = {0};
 static char s_src_mac_str_buf[18] = {0};
 static char s_dst_mac_str_buf[18] = {0};
-
 const uint8_t g_init_tx_str[] = "CQCQCQ";
 const uint8_t g_req_peer_str[] = "REQ PEER";
 const uint8_t g_res_peer_req_str[] = "RES PEER REQ OK";
 const uint8_t g_tx_dmy_str[] = "Dummy Data";
 
 static void printMacAddr(esp_mac_type_t type);
-static void wifi_scan(void);
 static void slave_addr_update(uint8_t *p_macaddr);
 static void mac_addr_print(void);
 static void tx_data_create(uint8_t *p_data, uint8_t data_len);
@@ -98,25 +94,6 @@ void rx_proc_cbk(const esp_now_recv_info_t *p_info, const uint8_t *p_data, int d
     s_is_rx_data = true;
 
     __EI(&g_mux);
-}
-
-static void wifi_scan(void)
-{
-    DEBUG_PRINTF_RTOS("WiFi scan...\n");
-    uint8_t network_cnt = WiFi.scanNetworks();
-
-    if (network_cnt == 0) {
-        DEBUG_PRINTF_RTOS("no WiFi network\n");
-    } else {
-        DEBUG_PRINTF_RTOS("found %d WiFi network\n", network_cnt);
-        for (uint8_t i = 0; i < network_cnt; ++i) {
-            DEBUG_PRINTF_RTOS("[WiFi Network No.%d]\n", i);
-            String ssid = WiFi.SSID(i);
-            DEBUG_PRINTF_RTOS("[SSID:%s] [RSSI:%d dBm] [Ch:%d]\n", ssid.c_str(), WiFi.RSSI(i), WiFi.channel(i));
-        }
-    }
-
-    DEBUG_PRINTF_RTOS("");
 }
 
 static void slave_addr_update(uint8_t *p_macaddr)
@@ -228,10 +205,14 @@ static void tx_proc_main(void)
             slave_addr_update(&s_src_mac_addr[0]);
             break;
 
+#ifdef ESP_NOW_TX
         case RES_PEER:
             tx_data_create((uint8_t*)&g_res_peer_req_str[0], sizeof(g_res_peer_req_str));
             slave_addr_update(&s_src_mac_addr[0]);
+            s_is_init_tx = false;
+            s_is_espnow_proc = false;
             break;
+#endif /* ESP_NOW_TX */
 
         case TX_DATA:
             // TODO:一旦、ダミーデータ送信
@@ -250,17 +231,26 @@ static void tx_proc_main(void)
             mac_addr_print();
             DEBUG_PRINTF_RTOS("TX Status : %s\n", s_tx_status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
         }
-
         tx_data_print();
     }
 
+#ifdef ESP_NOW_TX
+    if(s_is_init_tx != false) {
+        s_tx_data_type = ANY_ONE;
+    } else {
+        s_tx_data_type = TX_NONE;
+    }
+#else
     s_tx_data_type = TX_NONE;
+#endif /* ESP_NOW_TX */
 }
 
-void app_espnow_main(void)
+bool app_espnow_main(void)
 {
     rx_proc_main();
     tx_proc_main();
+
+    return s_is_espnow_proc;
 }
 
 static void printMacAddr(esp_mac_type_t type)
@@ -291,9 +281,11 @@ void app_espnow_init(void)
 
 #ifdef ESP_NOW_TX
     DEBUG_PRINTF_RTOS("ESPNow TX\n");
+    app_neopixel_main(16, 16, 16, 0, true, false); // 白 = ESPNOW 送信側
     s_tx_data_type = ANY_ONE;
 #else
     DEBUG_PRINTF_RTOS("ESPNow RX\n");
+    app_neopixel_main(16, 6, 0, 0, true, false); // オレンジ = ESPNOW 受信側
 #endif /* ESP_NOW_TX */
 
     WiFi.mode(WIFI_STA);
@@ -309,7 +301,8 @@ void app_espnow_init(void)
     snprintf(s_my_mac_str_buf, sizeof(s_my_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
             s_my_mac_addr[0], s_my_mac_addr[1], s_my_mac_addr[2],
             s_my_mac_addr[3], s_my_mac_addr[4], s_my_mac_addr[5]);
-    wifi_scan();
+
+    // app_wifi_scan();
 
     // ブロードキャスト = MACアドレス FF:FF:FF:FF:FF:FF
     __DI(&g_mux);
