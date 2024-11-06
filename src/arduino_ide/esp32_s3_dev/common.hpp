@@ -89,6 +89,11 @@ extern SemaphoreHandle_t xSerialMutex;
 #ifdef DEBUG_PRINTF_RTOS
 extern "C"
 {
+    static inline void NOP(void)
+    {
+        asm volatile("nop");
+    }
+
     static inline void safeSerialPrintf(const char *format, ...)
     {
         if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {

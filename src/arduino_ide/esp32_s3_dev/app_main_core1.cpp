@@ -18,9 +18,9 @@
 static xTaskHandle s_xTaskCore1Btn;
 static xTaskHandle s_xTaskCore1WiFi;
 static xTaskHandle s_xTaskCore1EspNow;
-static bool s_wifi_flag = false;
+static xTaskHandle s_xTaskCore1Main;
+static bool s_wifi_flag = true;
 static bool s_espnow_flag = true;
-static bool s_wifi_task = false;
 
 void vTaskCore1Btn(void *p_parameter)
 {
@@ -47,6 +47,7 @@ void vTaskCore1EspNow(void *p_parameter)
             DEBUG_PRINTF_RTOS("[Core1] vTaskCore1EspNow Suspend now!\n");
             vTaskResume(s_xTaskCore1WiFi);
             vTaskSuspend(NULL);
+            DEBUG_PRINTF_RTOS("[Core1] vTaskCore1EspNow Resume!\n");
         } else {
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
@@ -63,7 +64,7 @@ void vTaskCore1WiFi(void *p_parameter)
     }
 
     DEBUG_PRINTF_RTOS("[Core1] vTaskCore1WiFi\n");
-    app_neopixel_main(16, 0, 0, 0,true, false); // red
+    app_neopixel_main(16, 0, 0, 0, true, false); // red
     app_wifi_init();
 
     while (1)
@@ -71,16 +72,33 @@ void vTaskCore1WiFi(void *p_parameter)
         s_wifi_flag = app_wifi_main();
 
         if(s_wifi_flag != true){
-#ifdef DEEP_SLEEP_ENABLE
-            // DeepSleep @DEEPSLEEP_TIME_US
-            DEBUG_PRINTF_RTOS("DeepSleep : %d min\n", (DEEPSLEEP_TIME_US / 60) / 1000000);
-            esp_deep_sleep_start();
-#else
             DEBUG_PRINTF_RTOS("[Core1] vTaskCore1WiFi Suspend now!\n");
             vTaskSuspend(NULL);
-#endif
+            DEBUG_PRINTF_RTOS("[Core1] vTaskCore1WiFi Resume!\n");
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+void vTaskCore1Main(void *p_parameter)
+{
+    DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
+
+    while (1)
+    {
+        if ((s_wifi_flag != true) && (s_espnow_flag != true))
+        {
+            // DeepSleep @DEEPSLEEP_TIME_US
+            uint32_t dat = (DEEPSLEEP_TIME_US / 60) / 1000000;
+            DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main ... No Proc. DeepSleep Now!\n");
+            DEBUG_PRINTF_RTOS("DeepSleep : %d min\n", dat);
+            app_neopixel_main(16, 0, 16, 0, true, false); // 紫
+            esp_deep_sleep_start();
+        } else {
+            // TODO: Core1メインタスクの処理実装
+            NOP;
+        }
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 }
 
@@ -105,7 +123,7 @@ void app_main_init_core1(void)
                             "vTaskCore1Btn",   // タスク名
                             4096,              // スタック
                             NULL,              // パラメータ
-                            2,                 // 優先度(0～7、7が最優先)
+                            1,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1Btn,  // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 
@@ -113,7 +131,7 @@ void app_main_init_core1(void)
                             "vTaskCore1EspNow", // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
-                            7,                 // 優先度(0～7、7が最優先)
+                            4,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1EspNow, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 
@@ -122,10 +140,19 @@ void app_main_init_core1(void)
                             "vTaskCore1WiFi",   // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
-                            5,                 // 優先度(0～7、7が最優先)
+                            3,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1WiFi, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 #endif /* ESP_NOW_TX */
+
+    xTaskCreatePinnedToCore(vTaskCore1Main,   // コールバック関数ポインタ
+                            "vTaskCore1Main", // タスク名
+                            8192,              // スタック
+                            NULL,              // パラメータ
+                            6,                 // 優先度(0～7、7が最優先)
+                            &s_xTaskCore1Main, // ハンドル
+                            CPU_CORE_1);       // Core0 or Core1
+
 }
 
 void app_main_core1(void)

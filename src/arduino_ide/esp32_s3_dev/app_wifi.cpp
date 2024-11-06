@@ -110,8 +110,9 @@ static void setupAP(void)
     DEBUG_PRINTF_RTOS("AP SSID : %s\n", AP_SSID);
     DEBUG_PRINTF_RTOS("AP Password : %s\n", AP_PASSWORD);
 
-    DEBUG_PRINTF_RTOS("AP Web Server IP addr : %s\n", WiFi.softAPIP());
-    DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", WiFi.macAddress());
+    DEBUG_PRINTF_RTOS("AP Web Server IP addr : %s\n", WiFi.softAPIP().toString().c_str());
+    String str = WiFi.macAddress();
+    DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", str.c_str());
 }
 
 static void handleRoot(void)
@@ -135,8 +136,8 @@ static void handleSave(void)
         String ssid = server.arg("ssid");
         String password = server.arg("password");
 
-        DEBUG_PRINTF_RTOS("STA SSID : %s\n", ssid);
-        DEBUG_PRINTF_RTOS("STA Password : %s\n", password);
+        DEBUG_PRINTF_RTOS("STA SSID : %s\n", ssid.c_str());
+        DEBUG_PRINTF_RTOS("STA Password : %s\n", password.c_str());
 
         saveWiFiConfig(ssid, password);
         DEBUG_PRINTF_RTOS("STA SSID & Password Saved! Now on reboot...\n");
@@ -216,7 +217,7 @@ static void wifi_off_online_proc(void)
     if(s_ap_flg != false){
         app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
     }else{
-        app_neopixel_main(16, 0, 0, 0,true, false); // red, on
+        app_neopixel_main(16, 0, 0, 0, true, false); // red, on
     }
 }
 
@@ -244,8 +245,9 @@ static void sta_mode_main(void)
         app_neopixel_main(0, 16, 0, 0,true, false); // green, on
 
         DEBUG_PRINTF_RTOS("\nWiFi接続完了!\n");
-        DEBUG_PRINTF_RTOS("IP addr : %s\n", WiFi.localIP());
-        DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", WiFi.macAddress());
+        DEBUG_PRINTF_RTOS("IP addr : %s\n", WiFi.localIP().toString().c_str());
+        String str = WiFi.macAddress();
+        DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", str.c_str());
 
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         // __DI(&g_mux);
