@@ -6,6 +6,9 @@ RP2040評価F/W 個人開発リポジトリ🥳
 - 📍OS ... FreeRTOS
   - 📍CPU0 ... ✅FreeRTOS(搭載済み)
   - 📍CPU1 ... ✅FreeRTOS(搭載済み)
+
+![](/doc/espnow_req_res.png)
+
 ****
 
 # 開発環境

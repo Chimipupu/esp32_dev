@@ -13,23 +13,48 @@
 
 esp_now_peer_info_t s_peer_info;
 esp_now_send_status_t s_tx_status;
+
+e_esp_now_tx_type s_tx_data_type = TX_NONE;
+
+static bool s_is_broadcat_data = false;
 static bool s_is_rx_data = false;
+
+static bool s_is_init_broadcat = false;
+
+static bool s_is_unicast_peer = false;
+static bool s_is_unicast_data = false;
+static bool s_is_unicast_res = false;
+
 static uint8_t s_rx_data_len = 0;
 static uint8_t s_rx_data_buf[250] = {0};
+
 static uint8_t s_tx_data_len = 0;
 static uint8_t s_tx_data_buf[250] = {0};
+
 static uint8_t s_my_mac_addr[6] = {0};
 static uint8_t s_slave_mac_addr[6] = {0};
 static uint8_t s_src_mac_addr[6] = {0};
 static uint8_t s_des_mac_addr[6] = {0};
+
 static char s_my_mac_str_buf[18] = {0};
 static char s_slave_mac_str_buf[18] = {0};
 static char s_src_mac_str_buf[18] = {0};
 static char s_dst_mac_str_buf[18] = {0};
 
-const uint8_t tx_data[13] = "CQCQCQ";
+const uint8_t g_init_tx_str[] = "CQCQCQ";
+const uint8_t g_req_peer_str[] = "REQ PEER";
+const uint8_t g_res_peer_req_str[] = "RES PEER REQ OK";
+const uint8_t g_tx_dmy_str[] = "Dummy Data";
+
 static void printMacAddr(esp_mac_type_t type);
-static void scan_wifi_net_info(void);
+static void wifi_scan(void);
+static void slave_addr_update(uint8_t *p_macaddr);
+static void mac_addr_print(void);
+static void tx_data_create(uint8_t *p_data, uint8_t data_len);
+static void tx_data_print(void);
+static void tx_proc_main(void);
+static void rx_data_analyze(uint8_t *p_data);
+static void rx_proc_main(void);
 
 void tx_proc_cbk(const uint8_t *p_mac_addr, esp_now_send_status_t status)
 {
@@ -75,7 +100,7 @@ void rx_proc_cbk(const esp_now_recv_info_t *p_info, const uint8_t *p_data, int d
     __EI(&g_mux);
 }
 
-static void scan_wifi_net_info(void)
+static void wifi_scan(void)
 {
     DEBUG_PRINTF_RTOS("WiFi scan...\n");
     uint8_t network_cnt = WiFi.scanNetworks();
@@ -94,51 +119,68 @@ static void scan_wifi_net_info(void)
     DEBUG_PRINTF_RTOS("");
 }
 
-void app_espnow_main(void)
+static void slave_addr_update(uint8_t *p_macaddr)
 {
-#ifdef ESP_NOW_TX
-    DEBUG_PRINTF_RTOS("TX Data : ");
-    memset(&s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
-    for (int i = 0; i < sizeof(tx_data); i++)
-    {
-        __DI(&g_mux);
-        s_tx_data_buf[i] = tx_data[i];
-        __EI(&g_mux);
-        DEBUG_PRINTF_RTOS("%c", s_tx_data_buf[i]);
-    }
-    DEBUG_PRINTF_RTOS("\n");
+    memcpy(s_peer_info.peer_addr, p_macaddr, 6);
+    snprintf(s_slave_mac_str_buf, sizeof(s_slave_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+            p_macaddr[0], p_macaddr[1], p_macaddr[2],
+            p_macaddr[3], p_macaddr[4], p_macaddr[5]);
+    esp_now_add_peer(&s_peer_info);
+}
 
-    esp_err_t result = esp_now_send(s_peer_info.peer_addr, tx_data, sizeof(tx_data));
-
-    DEBUG_PRINTF_RTOS("Send Status : ");
-    if (result == ESP_OK) {
-        DEBUG_PRINTF_RTOS("Success\n");
-    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-        DEBUG_PRINTF_RTOS("ESPNOW not Init\n");
-    } else if (result == ESP_ERR_ESPNOW_ARG) {
-        DEBUG_PRINTF_RTOS("Invalid Argument\n");
-    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-        DEBUG_PRINTF_RTOS("Internal Error\n");
-    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-        DEBUG_PRINTF_RTOS("ESP_ERR_ESPNOW_NO_MEM\n");
-    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-        DEBUG_PRINTF_RTOS("Peer not found\n");
-    } else {
-        DEBUG_PRINTF_RTOS("Not sure what happened\n");
-    }
-
-    DEBUG_PRINTF_RTOS("My MAC : %s\n", s_src_mac_str_buf);
+static void mac_addr_print(void)
+{
+    DEBUG_PRINTF_RTOS("My MAC : %s\n", s_my_mac_str_buf);
     DEBUG_PRINTF_RTOS("Slave MAC : %s\n", s_slave_mac_str_buf);
+    DEBUG_PRINTF_RTOS("Src MAC : %s\n", s_src_mac_str_buf);
     DEBUG_PRINTF_RTOS("Dest MAC : %s\n", s_dst_mac_str_buf);
-    DEBUG_PRINTF_RTOS("TX Status : %s\n", s_tx_status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
-#else
-    if (s_is_rx_data != false) {
-        DEBUG_PRINTF_RTOS("My MAC : %s\n", s_my_mac_str_buf);
-        DEBUG_PRINTF_RTOS("Src MAC : %s\n", s_src_mac_str_buf);
-        DEBUG_PRINTF_RTOS("Dest MAC : %s\n", s_dst_mac_str_buf);
+}
 
-        DEBUG_PRINTF_RTOS("RX Data Length : %d\n", s_rx_data_len);
-        DEBUG_PRINTF_RTOS("RX Data : ");
+static void rx_data_analyze(uint8_t *p_data)
+{
+    // ユニキャスト
+    if (s_is_unicast_data != false) {
+        if (strcmp((const char*)p_data, "REQ PEER") == 0) {
+            s_tx_data_type = RES_PEER;
+        } else {
+            s_tx_data_type = TX_NONE;
+            s_is_unicast_data = false;
+        }
+    }
+
+    // ブロードキャスト
+    if (s_is_broadcat_data != false) {
+        if (strcmp((const char*)p_data, "CQCQCQ") == 0) {
+            s_tx_data_type = REQ_PEER;
+        } else {
+            s_tx_data_type = TX_NONE;
+            s_is_broadcat_data = false;
+        }
+    }
+}
+
+static void rx_proc_main(void)
+{
+    if (s_is_rx_data != false) {
+        DEBUG_PRINTF_RTOS("\n");
+        // ユニキャスト
+        int result = memcmp(s_my_mac_addr, s_des_mac_addr, sizeof(s_my_mac_addr));
+        if (result == 0) {
+            DEBUG_PRINTF_RTOS("ESPNow Unicast Data!\n");
+            s_is_unicast_data = true;
+        }
+
+        // ブロードキャスト
+        result = strcmp("ff:ff:ff:ff:ff:ff", s_dst_mac_str_buf);
+        if (result == 0) {
+            DEBUG_PRINTF_RTOS("ESPNow Broadcast Data!\n");
+            s_is_broadcat_data = true;
+        }
+
+        rx_data_analyze(&s_rx_data_buf[0]);
+
+        mac_addr_print();
+        DEBUG_PRINTF_RTOS("RX Data (%d Byte) : ", s_rx_data_len);
         for (int i = 0; i < s_rx_data_len; i++)
         {
             DEBUG_PRINTF_RTOS("%c", s_rx_data_buf[i]);
@@ -147,7 +189,78 @@ void app_espnow_main(void)
 
         s_is_rx_data = false;
     }
-#endif /* ESP_NOW_TX */
+}
+
+static void tx_data_create(uint8_t *p_data, uint8_t data_len)
+{
+    __DI(&g_mux);
+    s_tx_data_len = 0;
+    memset(&s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
+    for (uint8_t i = 0; i < data_len; i++)
+    {
+        s_tx_data_buf[i] = *p_data;
+        p_data++;
+        s_tx_data_len++;
+    }
+    __EI(&g_mux);
+}
+
+static void tx_data_print(void)
+{
+    DEBUG_PRINTF_RTOS("TX Data (%d Byte) : ", s_tx_data_len);
+    for (int i = 0; i < s_tx_data_len; i++)
+    {
+        DEBUG_PRINTF_RTOS("%c", s_tx_data_buf[i]);
+    }
+    DEBUG_PRINTF_RTOS("\n");
+}
+
+static void tx_proc_main(void)
+{
+    switch (s_tx_data_type)
+    {
+        case ANY_ONE:
+            tx_data_create((uint8_t*)&g_init_tx_str[0], sizeof(g_init_tx_str));
+            break;
+
+        case REQ_PEER:
+            tx_data_create((uint8_t*)&g_req_peer_str[0], sizeof(g_req_peer_str));
+            slave_addr_update(&s_src_mac_addr[0]);
+            break;
+
+        case RES_PEER:
+            tx_data_create((uint8_t*)&g_res_peer_req_str[0], sizeof(g_res_peer_req_str));
+            slave_addr_update(&s_src_mac_addr[0]);
+            break;
+
+        case TX_DATA:
+            // TODO:一旦、ダミーデータ送信
+            tx_data_create((uint8_t*)&g_tx_dmy_str[0], sizeof(g_tx_dmy_str));
+            break;
+
+        default:
+            break;
+    }
+
+    if(s_tx_data_type != TX_NONE)
+    {
+        DEBUG_PRINTF_RTOS("\n");
+        esp_err_t result = esp_now_send(s_peer_info.peer_addr, s_tx_data_buf, s_tx_data_len);
+        if (result == ESP_OK) {
+            mac_addr_print();
+            DEBUG_PRINTF_RTOS("TX Status : %s\n", s_tx_status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+        }
+
+        tx_data_print();
+    }
+
+    s_tx_data_type = TX_NONE;
+}
+
+void app_espnow_main(void)
+{
+    rx_proc_main();
+    tx_proc_main();
 }
 
 static void printMacAddr(esp_mac_type_t type)
@@ -178,9 +291,10 @@ void app_espnow_init(void)
 
 #ifdef ESP_NOW_TX
     DEBUG_PRINTF_RTOS("ESPNow TX\n");
+    s_tx_data_type = ANY_ONE;
 #else
     DEBUG_PRINTF_RTOS("ESPNow RX\n");
-#endif
+#endif /* ESP_NOW_TX */
 
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
@@ -192,7 +306,10 @@ void app_espnow_init(void)
     }
     // printMacAddr(ESP_MAC_WIFI_STA);
     esp_read_mac(s_my_mac_addr, ESP_MAC_WIFI_STA);
-    scan_wifi_net_info();
+    snprintf(s_my_mac_str_buf, sizeof(s_my_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+            s_my_mac_addr[0], s_my_mac_addr[1], s_my_mac_addr[2],
+            s_my_mac_addr[3], s_my_mac_addr[4], s_my_mac_addr[5]);
+    wifi_scan();
 
     // ブロードキャスト = MACアドレス FF:FF:FF:FF:FF:FF
     __DI(&g_mux);
