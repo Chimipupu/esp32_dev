@@ -11,11 +11,13 @@
 
 #include "app_esp_now.hpp"
 
-esp_now_peer_info_t slave;
+esp_now_peer_info_t s_peer_info;
 esp_now_send_status_t s_tx_status;
 static bool s_is_rx_data = false;
 static uint8_t s_rx_data_len = 0;
-static uint8_t s_data_buf[250] = {0};
+static uint8_t s_rx_data_buf[250] = {0};
+static uint8_t s_tx_data_len = 0;
+static uint8_t s_tx_data_buf[250] = {0};
 static uint8_t s_my_mac_addr[6] = {0};
 static uint8_t s_slave_mac_addr[6] = {0};
 static uint8_t s_src_mac_addr[6] = {0};
@@ -25,7 +27,9 @@ static char s_slave_mac_str_buf[18] = {0};
 static char s_src_mac_str_buf[18] = {0};
 static char s_dst_mac_str_buf[18] = {0};
 
+const uint8_t tx_data[13] = "CQCQCQ";
 static void printMacAddr(esp_mac_type_t type);
+static void scan_wifi_net_info(void);
 
 void tx_proc_cbk(const uint8_t *p_mac_addr, esp_now_send_status_t status)
 {
@@ -60,32 +64,51 @@ void rx_proc_cbk(const esp_now_recv_info_t *p_info, const uint8_t *p_data, int d
             s_my_mac_addr[3], s_my_mac_addr[4], s_my_mac_addr[5]);
 
     s_rx_data_len = data_len;
-
+    memset(&s_rx_data_buf, 0x00, sizeof(s_rx_data_buf));
     for (int i = 0; i < data_len; i++)
     {
-        s_data_buf[i] = *p_data;
+        s_rx_data_buf[i] = *p_data;
         p_data++;
     }
-
     s_is_rx_data = true;
 
     __EI(&g_mux);
 }
 
+static void scan_wifi_net_info(void)
+{
+    DEBUG_PRINTF_RTOS("WiFi scan...\n");
+    uint8_t network_cnt = WiFi.scanNetworks();
+
+    if (network_cnt == 0) {
+        DEBUG_PRINTF_RTOS("no WiFi network\n");
+    } else {
+        DEBUG_PRINTF_RTOS("found %d WiFi network\n", network_cnt);
+        for (uint8_t i = 0; i < network_cnt; ++i) {
+            DEBUG_PRINTF_RTOS("[WiFi Network No.%d]\n", i);
+            String ssid = WiFi.SSID(i);
+            DEBUG_PRINTF_RTOS("[SSID:%s] [RSSI:%d dBm] [Ch:%d]\n", ssid.c_str(), WiFi.RSSI(i), WiFi.channel(i));
+        }
+    }
+
+    DEBUG_PRINTF_RTOS("");
+}
+
 void app_espnow_main(void)
 {
 #ifdef ESP_NOW_TX
-    // ASCII "Hello ESP-NOW"
-    uint8_t tx_data[13] = {72, 101, 108, 108, 111, 32, 69, 83, 80, 45, 78, 79, 87};
-
     DEBUG_PRINTF_RTOS("TX Data : ");
+    memset(&s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
     for (int i = 0; i < sizeof(tx_data); i++)
     {
-        DEBUG_PRINTF_RTOS("%c", tx_data[i]);
+        __DI(&g_mux);
+        s_tx_data_buf[i] = tx_data[i];
+        __EI(&g_mux);
+        DEBUG_PRINTF_RTOS("%c", s_tx_data_buf[i]);
     }
     DEBUG_PRINTF_RTOS("\n");
 
-    esp_err_t result = esp_now_send(slave.peer_addr, tx_data, sizeof(tx_data));
+    esp_err_t result = esp_now_send(s_peer_info.peer_addr, tx_data, sizeof(tx_data));
 
     DEBUG_PRINTF_RTOS("Send Status : ");
     if (result == ESP_OK) {
@@ -118,7 +141,7 @@ void app_espnow_main(void)
         DEBUG_PRINTF_RTOS("RX Data : ");
         for (int i = 0; i < s_rx_data_len; i++)
         {
-            DEBUG_PRINTF_RTOS("%c", s_data_buf[i]);
+            DEBUG_PRINTF_RTOS("%c", s_rx_data_buf[i]);
         }
         DEBUG_PRINTF_RTOS("\n");
 
@@ -143,9 +166,9 @@ static void printMacAddr(esp_mac_type_t type)
 
 void app_espnow_init(void)
 {
-    memset(&s_data_buf, 0x00, sizeof(s_data_buf));
+    memset(&s_rx_data_buf, 0x00, sizeof(s_rx_data_buf));
+    memset(&s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
     memset(&s_my_mac_addr, 0x00, sizeof(s_my_mac_addr));
-    memset(&s_slave_mac_addr, 0x00, sizeof(s_slave_mac_addr));
     memset(&s_src_mac_addr, 0x00, sizeof(s_src_mac_addr));
     memset(&s_des_mac_addr, 0x00, sizeof(s_des_mac_addr));
     memset(&s_my_mac_str_buf, 0x00, sizeof(s_my_mac_str_buf));
@@ -169,20 +192,21 @@ void app_espnow_init(void)
     }
     // printMacAddr(ESP_MAC_WIFI_STA);
     esp_read_mac(s_my_mac_addr, ESP_MAC_WIFI_STA);
+    scan_wifi_net_info();
 
     // ブロードキャスト = MACアドレス FF:FF:FF:FF:FF:FF
-    memset(&slave, 0, sizeof(slave));
     __DI(&g_mux);
-    for (int i = 0; i < 6; ++i) {
-        slave.peer_addr[i] = (uint8_t)0xff;
-    }
-    memcpy(s_slave_mac_addr, slave.peer_addr, 6);
+    memset(&s_peer_info, 0, sizeof(s_peer_info));
+    memset(&s_slave_mac_addr, 0xff, sizeof(s_slave_mac_addr));
+    memcpy(s_peer_info.peer_addr, s_slave_mac_addr, 6);
+    s_peer_info.channel = 0;
+    s_peer_info.encrypt = false;
     snprintf(s_slave_mac_str_buf, sizeof(s_slave_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
             s_slave_mac_addr[0], s_slave_mac_addr[1], s_slave_mac_addr[2],
             s_slave_mac_addr[3], s_slave_mac_addr[4], s_slave_mac_addr[5]);
     __EI(&g_mux);
 
-    esp_err_t addStatus = esp_now_add_peer(&slave);
+    esp_err_t addStatus = esp_now_add_peer(&s_peer_info);
     if (addStatus == ESP_OK) {
         DEBUG_PRINTF_RTOS("ESPNow Init OK\n");
     }
