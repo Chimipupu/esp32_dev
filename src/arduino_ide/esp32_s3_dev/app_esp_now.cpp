@@ -9,6 +9,7 @@
  * 
  */
 
+#ifdef __ESP_NOW_ENABLE__
 #include "app_esp_now.hpp"
 #include "app_wifi.hpp"
 #include "app_neopixel.hpp"
@@ -324,3 +325,4 @@ void app_espnow_init(void)
     esp_now_register_send_cb(tx_proc_cbk);
     esp_now_register_recv_cb(rx_proc_cbk);
 }
+#endif /* __ESP_NOW_ENABLE__ */

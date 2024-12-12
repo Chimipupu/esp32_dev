@@ -11,6 +11,7 @@
 #ifndef APP_WIFI_HPP
 #define APP_WIFI_HPP
 
+#ifdef __WIFI_ENABLE__
 // Lib, Drv
 #include <WiFi.h>
 #include <WebServer.h>
@@ -35,5 +36,6 @@ extern portMUX_TYPE g_mux;
 void app_wifi_scan(void);
 void app_wifi_init(void);
 bool app_wifi_main(void);
+#endif /* __WIFI_ENABLE__ */
 
 #endif /* APP_WIFI_HPP */

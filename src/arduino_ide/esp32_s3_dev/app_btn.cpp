@@ -28,7 +28,7 @@ void IRAM_ATTR buttonISR()
         if (currentState) {
             if (!s_buttonState.processingClicks ||
                 (currentTime - s_buttonState.lastReleaseTime <= CLICK_TIMEOUT)) {
-                s_buttonState.clickCount++;
+                s_buttonState.clickCount += 1;
                 s_buttonState.processingClicks = true;
             } else {
                 s_buttonState.clickCount = 1;

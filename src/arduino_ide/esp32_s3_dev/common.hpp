@@ -18,17 +18,30 @@
 #include <stdint.h>
 #include <string.h>
 
-// FreeRTOS
+// Arduino IDE Lib
+#include <Arduino.h>
+
+// FreeRTOS Lib
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
 
-#define USE_ESPNOW_MODE
+// #define ATOM_S3
+// #define ATOM_S3_LITE
+#define YD_ESP_S3
+
+// #define __WIFI_ENABLE__
+// #define __ESP_NOW_ENABLE__
+#if defined(__WIFI_ENABLE__) && defined(__ESP_NOW_ENABLE__)
+    #define ESP_NOW_TX
+    // #define ESP_NOW_RX
+#endif /* __ESP_NOW_ENABLE__ */
+
 // #define FILESYSTEM_RESET
 // #define DEEP_SLEEP_ENABLE
 
-// #define YD_ESP32_S3
-#ifndef ATOM_S3_LITE
+#define YD_ESP32_S3
+#if !defined(ATOM_S3_LITE) && !defined(YD_ESP32_S3)
 #include <M5AtomS3.h>
 #define ATOM_S3_LITE
 #endif
@@ -53,10 +66,6 @@ extern SemaphoreHandle_t xSerialMutex;
 
 #define CPU_CORE_0      0
 #define CPU_CORE_1      1
-
-// #define ATOM_S3
-#define ATOM_S3_LITE
-// #define YD_ESP_S3
 
 #ifndef APP_CORE
 // #define APP_CORE        CPU_CORE_0
@@ -87,80 +96,89 @@ extern SemaphoreHandle_t xSerialMutex;
 
 #define DEBUG_PRINTF_RTOS   safeSerialPrintf
 #ifdef DEBUG_PRINTF_RTOS
-extern "C"
+
+#ifndef NOP
+static inline void NOP(void)
 {
-    static inline void NOP(void)
-    {
-        asm volatile("nop");
-    }
+    asm volatile("nop");
+}
+#endif
 
-    static inline void safeSerialPrintf(const char *format, ...)
-    {
-        if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
-            __DI(&g_mux);
-            va_list args;
-            va_start(args, format);
+static inline void WDT_TOGGLE(void)
+{
+#ifdef __WDT_ENABLE__
+    watchdog_update();
+#else
+    asm volatile("nop");
+#endif /* __WDT_ENABLE__ */
+}
 
-            for (const char *p = format; *p != '\0'; p++) {
-                if (*p == '%') {
-                    p++;  // '%'の次の文字を見る
-                    int width = 0;
-                    int precision = -1;
+static inline void safeSerialPrintf(const char *format, ...)
+{
+    if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
+        __DI(&g_mux);
+        va_list args;
+        va_start(args, format);
 
-                    // 幅の取得
-                    while (*p >= '0' && *p <= '9') {
-                        width = width * 10 + (*p - '0');
-                        p++;
-                    }
+        for (const char *p = format; *p != '\0'; p++) {
+            if (*p == '%') {
+                p++;  // '%'の次の文字を見る
+                int width = 0;
+                int precision = -1;
 
-                    // 精度の取得
-                    if (*p == '.') {
-                        p++;
-                        precision = 0;
-                        while (*p >= '0' && *p <= '9') {
-                            precision = precision * 10 + (*p - '0');
-                            p++;
-                        }
-                    }
-
-                    // フォーマット指定子に基づいて処理
-                    switch (*p) {
-                        case 'd':  // 整数
-                            Serial.print(va_arg(args, int));
-                            break;
-                        case 'f':  // 浮動小数点数（float）
-                        case 'l':  // 'l' は無視
-                        case 'F':  // 浮動小数点数（float、大文字）
-                            Serial.print(va_arg(args, double), (precision >= 0) ? precision : 2);
-                            break;
-                        case 's':  // 文字列
-                            Serial.print(va_arg(args, char*));
-                            break;
-                        case 'c':  // 文字
-                            Serial.print((char)va_arg(args, int));
-                            break;
-                        case 'x':  // 16進数（小文字）
-                        case 'X':  // 16進数（大文字）
-                            Serial.print(va_arg(args, int), HEX);
-                            break;
-                        default:  // 他のフォーマット指定子はそのまま表示
-                            Serial.print(*p);
-                            break;
-                    }
-                } else if (*p == '\r' || *p == '\n') {
-                    // 改行シーケンスの処理
-                    Serial.println(); // 改行
-                } else {
-                    // '%'でない文字はそのまま表示
-                    Serial.print(*p);
+                // 幅の取得
+                while (*p >= '0' && *p <= '9') {
+                    width = width * 10 + (*p - '0');
+                    p++;
                 }
+
+                // 精度の取得
+                if (*p == '.') {
+                    p++;
+                    precision = 0;
+                    while (*p >= '0' && *p <= '9') {
+                        precision = precision * 10 + (*p - '0');
+                        p++;
+                    }
+                }
+
+                // フォーマット指定子に基づいて処理
+                switch (*p) {
+                    case 'd':  // 整数
+                        Serial.print(va_arg(args, int));
+                        break;
+                    case 'f':  // 浮動小数点数（float）
+                    case 'l':  // 'l' は無視
+                    case 'F':  // 浮動小数点数（float、大文字）
+                        Serial.print(va_arg(args, double), (precision >= 0) ? precision : 2);
+                        break;
+                    case 's':  // 文字列
+                        Serial.print(va_arg(args, char*));
+                        break;
+                    case 'c':  // 文字
+                        Serial.print((char)va_arg(args, int));
+                        break;
+                    case 'x':  // 16進数（小文字）
+                    case 'X':  // 16進数（大文字）
+                        Serial.print(va_arg(args, int), HEX);
+                        break;
+                    default:  // 他のフォーマット指定子はそのまま表示
+                        Serial.print(*p);
+                        break;
+                }
+            } else if (*p == '\r' || *p == '\n') {
+                // 改行シーケンスの処理
+                Serial.println(); // 改行
+            } else {
+                // '%'でない文字はそのまま表示
+                Serial.print(*p);
             }
-            va_end(args);
-            __EI(&g_mux);
-            xSemaphoreGive(xSerialMutex);
-        } else {
-            Serial.println("Failed to acquire mutex!");
         }
+        va_end(args);
+        __EI(&g_mux);
+        xSemaphoreGive(xSerialMutex);
+    } else {
+        Serial.println("Failed to acquire mutex!");
     }
 }
 #endif /* DEBUG_PRINTF_RTOS */

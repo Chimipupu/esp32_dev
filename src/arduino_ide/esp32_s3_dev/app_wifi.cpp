@@ -9,6 +9,7 @@
  * 
  */
 
+#ifdef __WIFI_ENABLE__
 #include"app_wifi.hpp"
 #include "app_wifi_inital_html.hpp"
 #include "app_ftp.hpp"
@@ -339,13 +340,9 @@ void app_wifi_init(void)
     app_wifi_scan();
 
     DEBUG_PRINTF_RTOS("WiFi設定をファイルシステムから読み込み中...\n");
-
-    if (loadWiFiConfig() && config.ssid.length() > 0)
-    {
+    if (loadWiFiConfig() && config.ssid.length() > 0) {
         sta_mode_main();
-    }
-    else
-    {
+    } else {
         s_wifi_flag = true;
         ap_mode_main();
     }
@@ -370,3 +367,4 @@ bool app_wifi_main(void)
 
     return s_wifi_flag;
 }
+#endif /* __WIFI_ENABLE__ */

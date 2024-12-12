@@ -12,6 +12,7 @@
 #ifndef APP_ESP_NOW_HPP
 #define APP_ESP_NOW_HPP
 
+#ifdef __ESP_NOW_ENABLE__
 #include <stdint.h>
 #include <string.h>
 #include <esp_system.h>
@@ -19,11 +20,7 @@
 #include <esp_wifi.h>
 #include <esp_now.h>
 #include <WiFi.h>
-
 #include "common.hpp"
-
-#define ESP_NOW_TX
-// #define ESP_NOW_RX
 
 typedef enum {
     TX_NONE = 0x00,
@@ -37,5 +34,5 @@ extern portMUX_TYPE g_mux;
 
 void app_espnow_init(void);
 bool app_espnow_main(void);
-
+#endif /* __ESP_NOW_ENABLE__ */
 #endif /* APP_ESP_NOW_HPP */
