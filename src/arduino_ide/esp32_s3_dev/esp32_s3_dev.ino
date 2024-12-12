@@ -34,8 +34,8 @@ void core1_init(void)
     app_main_init_core1();
 
 #if 0
-    xTaskCreatePinnedToCore(vTaskCore0Main,     // コールバック関数ポインタ
-                            "vTaskCore0Main",   // タスク名
+    xTaskCreatePinnedToCore(vTaskCore0Main,    // コールバック関数ポインタ
+                            "vTaskCore0Main",  // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
                             2,                 // 優先度(0～7、7が最優先)
