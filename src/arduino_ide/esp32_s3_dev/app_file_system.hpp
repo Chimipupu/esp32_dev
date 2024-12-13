@@ -14,6 +14,10 @@
 
 #include "common.hpp"
 
+#define HEAP_SRAM                 0
+#define HEAP_PSRAM                1
+#define PSRAM_MALLOC_TEST_SIZE    32
+
 #ifndef FILE_SYSTEM
     #ifdef YD_ESP32_S3
         #include "FS.h"
@@ -28,6 +32,6 @@
 #endif /* FILE_SYSTEM */
 
 void app_fs_info(void);
-void app_fs_heap_malloc(void *p_malloc, size_t size, uint8_t type);
+void* app_fs_heap_malloc(size_t size, uint8_t type);
 
 #endif /* APP_FILE_SYSTEM_HPP */

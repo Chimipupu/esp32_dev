@@ -1,6 +1,6 @@
 /**
  * @file app_file_system.cpp
- * @author your name (you@domain.com)
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ファイルシステム　アプリ
  * @version 0.1
  * @date 2024-12-13
@@ -11,11 +11,7 @@
 
 #include "app_file_system.hpp"
 
-#define HEAP_SRAM            0
-#define HEAP_PSRAM           1
-#define PSRAM_MALLOC_TEST_SIZE    32
 static bool s_is_psram = false;
-
 static void heap_print(uint8_t type);
 static void heap_print(uint8_t type)
 {
@@ -51,12 +47,14 @@ void app_fs_info(void)
 /**
  * @brief malloc(SRAM or PSRAM)のラッパー
  * 
- * @param p_malloc mallocした領域
  * @param size mallocするサイズ
  * @param type SRAM or PSRAM
+ * @return void* mallocした領域
  */
-void app_fs_heap_malloc(void *p_malloc, size_t size, uint8_t type)
+void* app_fs_heap_malloc(size_t size, uint8_t type)
 {
+    void *p_malloc = NULL;
+
     switch (type)
     {
         case HEAP_SRAM:
@@ -70,6 +68,8 @@ void app_fs_heap_malloc(void *p_malloc, size_t size, uint8_t type)
         default:
             break;
     }
+
+    return p_malloc;
 }
 
 #ifdef YD_ESP32_S3
@@ -98,8 +98,11 @@ void app_fs_psram_test(void)
         DEBUG_PRINTF_RTOS("[PSRAM Test]\n");
         heap_print(HEAP_PSRAM);
         DEBUG_PRINTF_RTOS("PSRAM malloc size = %d byte\n", PSRAM_MALLOC_TEST_SIZE);
-        void *p_pram_val;
-        app_fs_heap_malloc(p_pram_val, PSRAM_MALLOC_TEST_SIZE, HEAP_PSRAM);
+#if 1
+        void *p_pram_val = app_fs_heap_malloc(PSRAM_MALLOC_TEST_SIZE, HEAP_PSRAM);
+#else
+        void *p_pram_val = heap_caps_malloc(PSRAM_MALLOC_TEST_SIZE, MALLOC_CAP_SPIRAM);
+#endif
         heap_print(HEAP_PSRAM);
         DEBUG_PRINTF_RTOS("PSRAM malloc free\n");
         free(p_pram_val);
