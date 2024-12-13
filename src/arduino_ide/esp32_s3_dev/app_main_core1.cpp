@@ -113,8 +113,7 @@ void vTaskCore1Main(void *p_parameter)
 #else
         DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
     #ifdef YD_ESP32_S3
-        app_fs_psram_test();
-        app_fs_info();
+        // NOP
     #endif /* YD_ESP32_S3 */
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 #endif
@@ -134,7 +133,6 @@ void app_main_init_core1(void)
 #ifdef YD_ESP32_S3
     // PSRAM
     app_fs_psram_init();
-    app_fs_info();
     app_fs_psram_test();
 #endif /* YD_ESP32_S3 */
 

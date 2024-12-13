@@ -11,17 +11,65 @@
 
 #include "app_file_system.hpp"
 
-#define PSRAM_MALLOC_TEST_SIZE    100
+#define HEAP_SRAM            0
+#define HEAP_PSRAM           1
+#define PSRAM_MALLOC_TEST_SIZE    32
 static bool s_is_psram = false;
 
+static void heap_print(uint8_t type);
+static void heap_print(uint8_t type)
+{
+    switch (type)
+    {
+        case HEAP_SRAM:
+            DEBUG_PRINTF_RTOS("Heap Size: %d Byte\n", ESP.getHeapSize());
+            DEBUG_PRINTF_RTOS("Heap Free: %d Byte\n", ESP.getFreeHeap());
+            break;
+
+        case HEAP_PSRAM:
+            DEBUG_PRINTF_RTOS("PSRAM Size: %d Byte\n", ESP.getPsramSize());
+            DEBUG_PRINTF_RTOS("PSRAM Free: %d Byte\n", ESP.getFreePsram());
+            break;
+
+        default:
+            break;
+    }
+}
+
+/**
+ * @brief ファイルシステム関連の情報表示
+ * 
+ */
 void app_fs_info(void)
 {
-    DEBUG_PRINTF_RTOS("Heap Size: %d Byte\n", ESP.getHeapSize());
-    DEBUG_PRINTF_RTOS("Heap Free: %d Byte\n", ESP.getFreeHeap());
+    heap_print(HEAP_SRAM);
 #ifdef YD_ESP32_S3
-    DEBUG_PRINTF_RTOS("PSRAM Size: %d Byte\n", ESP.getPsramSize());
-    DEBUG_PRINTF_RTOS("PSRAM Free: %d Byte\n", ESP.getFreePsram());
+    heap_print(HEAP_PSRAM);
 #endif /* YD_ESP32_S3 */
+}
+
+/**
+ * @brief malloc(SRAM or PSRAM)のラッパー
+ * 
+ * @param p_malloc mallocした領域
+ * @param size mallocするサイズ
+ * @param type SRAM or PSRAM
+ */
+void app_fs_heap_malloc(void *p_malloc, size_t size, uint8_t type)
+{
+    switch (type)
+    {
+        case HEAP_SRAM:
+            p_malloc = heap_caps_malloc(size, MALLOC_CAP_32BIT);
+            break;
+
+        case HEAP_PSRAM:
+            p_malloc = heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+            break;
+
+        default:
+            break;
+    }
 }
 
 #ifdef YD_ESP32_S3
@@ -48,8 +96,14 @@ void app_fs_psram_test(void)
     s_is_psram = psramFound();
     if (s_is_psram) {
         DEBUG_PRINTF_RTOS("[PSRAM Test]\n");
-        void *p_pram_val = heap_caps_malloc(PSRAM_MALLOC_TEST_SIZE, MALLOC_CAP_SPIRAM);
+        heap_print(HEAP_PSRAM);
+        DEBUG_PRINTF_RTOS("PSRAM malloc size = %d byte\n", PSRAM_MALLOC_TEST_SIZE);
+        void *p_pram_val;
+        app_fs_heap_malloc(p_pram_val, PSRAM_MALLOC_TEST_SIZE, HEAP_PSRAM);
+        heap_print(HEAP_PSRAM);
+        DEBUG_PRINTF_RTOS("PSRAM malloc free\n");
         free(p_pram_val);
+        heap_print(HEAP_PSRAM);
     }
 }
 #endif /* YD_ESP32_S3 */

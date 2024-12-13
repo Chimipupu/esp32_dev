@@ -28,4 +28,6 @@
 #endif /* FILE_SYSTEM */
 
 void app_fs_info(void);
+void app_fs_heap_malloc(void *p_malloc, size_t size, uint8_t type);
+
 #endif /* APP_FILE_SYSTEM_HPP */
