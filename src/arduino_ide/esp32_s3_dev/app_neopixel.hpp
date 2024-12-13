@@ -1,11 +1,11 @@
 /**
  * @file app_neopixel.hpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief NeoPixelアプリ
  * @version 0.1
  * @date 2024-10-16
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 #ifndef APP_NEOPIXEL_HPP

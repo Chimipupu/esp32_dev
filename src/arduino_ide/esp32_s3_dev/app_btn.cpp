@@ -1,11 +1,11 @@
 /**
  * @file app_btn.cpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESP32 ボタン アプリ処理
  * @version 0.1
  * @date 2024-10-27
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 
@@ -28,7 +28,7 @@ void IRAM_ATTR buttonISR()
         if (currentState) {
             if (!s_buttonState.processingClicks ||
                 (currentTime - s_buttonState.lastReleaseTime <= CLICK_TIMEOUT)) {
-                s_buttonState.clickCount += 1;
+                s_buttonState.clickCount = s_buttonState.clickCount + 1;
                 s_buttonState.processingClicks = true;
             } else {
                 s_buttonState.clickCount = 1;

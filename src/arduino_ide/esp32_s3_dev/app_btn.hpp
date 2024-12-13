@@ -1,11 +1,11 @@
 /**
  * @file app_btn.hpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESP32 ボタン アプリ処理
  * @version 0.1
  * @date 2024-10-27
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 

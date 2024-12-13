@@ -1,3 +1,14 @@
+/**
+ * @file app_file_system.cpp
+ * @author your name (you@domain.com)
+ * @brief ファイルシステム　アプリ
+ * @version 0.1
+ * @date 2024-12-13
+ * 
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * 
+ */
+
 #include "app_file_system.hpp"
 
 #define PSRAM_MALLOC_TEST_SIZE    100
@@ -34,19 +45,11 @@ void app_fs_psram_init(void)
  */
 void app_fs_psram_test(void)
 {
+    s_is_psram = psramFound();
     if (s_is_psram) {
         DEBUG_PRINTF_RTOS("[PSRAM Test]\n");
-        __DI(&g_mux);
-        uint32_t* largeArray = (uint32_t*)ps_malloc(PSRAM_MALLOC_TEST_SIZE * sizeof(uint32_t));
-        __EI(&g_mux);
-        if (largeArray != NULL) {
-            DEBUG_PRINTF_RTOS("PSRAM malloc success\n");
-            __DI(&g_mux);
-            free(largeArray);
-            __EI(&g_mux);
-        } else {
-            DEBUG_PRINTF_RTOS("PSRAM malloc fail\n");
-        }
+        void *p_pram_val = heap_caps_malloc(PSRAM_MALLOC_TEST_SIZE, MALLOC_CAP_SPIRAM);
+        free(p_pram_val);
     }
 }
 #endif /* YD_ESP32_S3 */

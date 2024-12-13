@@ -1,14 +1,15 @@
 /**
  * @file app_ftp.cpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESP32 FTP アプリ処理
  * @version 0.1
  * @date 2024-10-18
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 
+#ifdef __WIFI_ENABLE__
 #include "app_ftp.hpp"
 #include "app_file_system.hpp"
 
@@ -69,3 +70,4 @@ void app_ftp_main(void)
 {
     ftpSrv.handleFTP();
 }
+#endif /* __WIFI_ENABLE__ */

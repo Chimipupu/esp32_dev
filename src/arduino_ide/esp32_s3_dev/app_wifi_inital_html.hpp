@@ -1,16 +1,18 @@
 /**
  * @file app_wifi_inital_html.hpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESP32 初期AP HTML
  * @version 0.1
  * @date 2024-10-18
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
+
 #ifndef APP_WIFI_INITAL_HTML_HPP
 #define APP_WIFI_INITAL_HTML_HPP
 
+#ifdef __WIFI_ENABLE__
 #if 1
 const char *p_settingsHTML = R"(
 <!DOCTYPE html>
@@ -305,5 +307,5 @@ const char *p_indexHTML = R"(
 
 </html>
 )";
-
+#endif /* __WIFI_ENABLE__ */
 #endif /* APP_WIFI_INITAL_HTML_HPP */

@@ -1,11 +1,11 @@
 /**
  * @file app_main_core0.cpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief  Core1 アプリ
  * @version 0.1
  * @date 2024-10-16
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 
@@ -113,7 +113,8 @@ void vTaskCore1Main(void *p_parameter)
 #else
         DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
     #ifdef YD_ESP32_S3
-        // NOP;
+        app_fs_psram_test();
+        app_fs_info();
     #endif /* YD_ESP32_S3 */
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 #endif
@@ -134,6 +135,7 @@ void app_main_init_core1(void)
     // PSRAM
     app_fs_psram_init();
     app_fs_info();
+    app_fs_psram_test();
 #endif /* YD_ESP32_S3 */
 
     // ボタン
@@ -145,8 +147,8 @@ void app_main_init_core1(void)
     // Deep Sleep
     // esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
-    // FreeRTOS
 #if 0
+    // FreeRTOS
     xTaskCreatePinnedToCore(vTaskCore1Btn,     // コールバック関数ポインタ
                             "vTaskCore1Btn",   // タスク名
                             4096,              // スタック

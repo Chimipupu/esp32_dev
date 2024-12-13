@@ -1,11 +1,11 @@
 /**
  * @file app_esp_now.cpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESPNOW アプリ
  * @version 0.1
  * @date 2024-11-6
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 

@@ -1,11 +1,11 @@
 /**
  * @file common.hpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief ESP32 共通ヘッダー
  * @version 0.1
  * @date 2024-10-19
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 
@@ -94,9 +94,6 @@ extern SemaphoreHandle_t xSerialMutex;
 #endif
 #endif
 
-#define DEBUG_PRINTF_RTOS   safeSerialPrintf
-#ifdef DEBUG_PRINTF_RTOS
-
 #ifndef NOP
 static inline void NOP(void)
 {
@@ -113,21 +110,24 @@ static inline void WDT_TOGGLE(void)
 #endif /* __WDT_ENABLE__ */
 }
 
-static inline void safeSerialPrintf(const char *format, ...)
+#define DEBUG_PRINTF_RTOS   safeSerialPrintf
+#ifdef DEBUG_PRINTF_RTOS
+static inline void safeSerialPrintf(const char *p_format, ...)
 {
     if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
-        __DI(&g_mux);
         va_list args;
-        va_start(args, format);
+        va_start(args, p_format);
 
-        for (const char *p = format; *p != '\0'; p++) {
+        for(const char *p = p_format; *p != '\0'; p++)
+        {
             if (*p == '%') {
                 p++;  // '%'の次の文字を見る
                 int width = 0;
                 int precision = -1;
 
                 // 幅の取得
-                while (*p >= '0' && *p <= '9') {
+                while(*p >= '0' && *p <= '9')
+                {
                     width = width * 10 + (*p - '0');
                     p++;
                 }
@@ -143,7 +143,8 @@ static inline void safeSerialPrintf(const char *format, ...)
                 }
 
                 // フォーマット指定子に基づいて処理
-                switch (*p) {
+                switch(*p)
+                {
                     case 'd':  // 整数
                         Serial.print(va_arg(args, int));
                         break;
@@ -175,7 +176,6 @@ static inline void safeSerialPrintf(const char *format, ...)
             }
         }
         va_end(args);
-        __EI(&g_mux);
         xSemaphoreGive(xSerialMutex);
     } else {
         Serial.println("Failed to acquire mutex!");

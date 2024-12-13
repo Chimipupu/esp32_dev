@@ -1,11 +1,11 @@
 /**
  * @file app_main_core1.cpp
- * @author ちみ/Chimi（https://github.com/Chimipupu）
+ * @author ちみ/Chimi(https://github.com/Chimipupu)
  * @brief  Core1 アプリ
  * @version 0.1
  * @date 2024-10-16
  * 
- * @copyright Copyright (c) 2024
+ * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
  * 
  */
 
