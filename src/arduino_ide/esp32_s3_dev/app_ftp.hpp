@@ -12,12 +12,14 @@
 #ifndef APP_FTP_HPP
 #define APP_FTP_HPP
 
-#ifdef __WIFI_ENABLE__
+#include "common.hpp"
+
+#ifdef __FTP_ENABLE__
 // Lib, Drv
 #include "Arduino.h"
 #include <SimpleFTPServer.h>
 
 void app_ftp_init(void);
 void app_ftp_main(void);
-#endif /* __WIFI_ENABLE__ */
+#endif /* __FTP_ENABLE__ */
 #endif /* APP_FTP_HPP */

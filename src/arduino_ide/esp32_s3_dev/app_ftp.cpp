@@ -9,7 +9,9 @@
  * 
  */
 
-#ifdef __WIFI_ENABLE__
+#include "common.hpp"
+
+#ifdef __FTP_ENABLE__
 #include "app_ftp.hpp"
 #include "app_file_system.hpp"
 
@@ -70,4 +72,4 @@ void app_ftp_main(void)
 {
     ftpSrv.handleFTP();
 }
-#endif /* __WIFI_ENABLE__ */
+#endif /* __FTP_ENABLE__ */

@@ -26,11 +26,13 @@
 #include <task.h>
 #include <semphr.h>
 
+#define __WIFI_ENABLE__
+// #define __FTP_ENABLE__
+
 // #define ATOM_S3
 // #define ATOM_S3_LITE
 #define YD_ESP_S3
 
-// #define __WIFI_ENABLE__
 // #define __ESP_NOW_ENABLE__
 #if defined(__WIFI_ENABLE__) && defined(__ESP_NOW_ENABLE__)
     #define ESP_NOW_TX

@@ -12,6 +12,8 @@
 #ifndef APP_WIFI_INITAL_HTML_HPP
 #define APP_WIFI_INITAL_HTML_HPP
 
+#include "common.hpp"
+
 #ifdef __WIFI_ENABLE__
 #if 1
 const char *p_settingsHTML = R"(

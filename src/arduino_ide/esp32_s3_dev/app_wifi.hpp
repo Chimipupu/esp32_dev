@@ -11,6 +11,8 @@
 #ifndef APP_WIFI_HPP
 #define APP_WIFI_HPP
 
+#include "common.hpp"
+
 #ifdef __WIFI_ENABLE__
 // Lib, Drv
 #include <WiFi.h>

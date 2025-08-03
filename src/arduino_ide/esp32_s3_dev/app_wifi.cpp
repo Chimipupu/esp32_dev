@@ -9,6 +9,8 @@
  * 
  */
 
+#include "common.hpp"
+
 #ifdef __WIFI_ENABLE__
 #include"app_wifi.hpp"
 #include "app_wifi_inital_html.hpp"
@@ -207,7 +209,9 @@ static void wifi_online_proc(void)
     if(s_ftp_flg != false)
     {
         app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+#ifdef __FTP_ENABLE__
         app_ftp_main();
+#endif
     } else {
         app_neopixel_main(0, 16, 0, 0,true, false); // green, on
     }
@@ -266,9 +270,11 @@ static void sta_mode_main(void)
         server.handleClient();
 
 #ifdef YD_ESP_S3
+    #ifdef __FTP_ENABLE__
         // FTP Server
         app_ftp_init();
         s_ftp_flg = true;
+    #endif // __FTP_ENABLE__
 #else
         DEBUG_PRINTF_RTOS("WiFiから切断\n");
         WiFi.disconnect();
