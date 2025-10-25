@@ -1,41 +1,32 @@
 /**
  * @file app_main_core1.cpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief  Core1 アプリ
  * @version 0.1
- * @date 2024-10-16
+ * @date 2025-10-25
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 
 #include "common.hpp"
 #include "app_main_core0.hpp"
 
-rgbled_state_t g_rgbled_state;
-
 void core0RgbLedTask(void *p_parameter)
 {
     DEBUG_PRINTF_RTOS("[Core0] ... core0RgbLedTask\n");
     app_neopixel_init();
-
-    // g_rgbled_state.red = 0;
-    // g_rgbled_state.green = 0;
-    // g_rgbled_state.blue = 0;
-    // g_rgbled_state.brightness = 0;
-    // g_rgbled_state.onoff = false;
-    // g_rgbled_state.autoled = false;
+    app_neopixel_set_color(0x00, 0xFF, 0x00, 0x00); // 赤色
 
     while (1)
     {
-        // app_neopixel_main(&g_rgbled_state);
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 
 void app_main_init_core0(void)
 {
-#if 0
+#if 1
     // FreeRTOS
     xTaskCreatePinnedToCore(core0RgbLedTask,   // コールバック関数ポインタ
                             "core0RgbLedTask", // タスク名

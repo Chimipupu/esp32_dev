@@ -1,11 +1,11 @@
 /**
  * @file app_wifi_inital_html.hpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief ESP32 初期AP HTML
  * @version 0.1
  * @date 2024-10-18
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 

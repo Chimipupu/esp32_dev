@@ -1,11 +1,11 @@
 /**
  * @file app_neopixel.cpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief NeoPixelアプリ
  * @version 0.1
- * @date 2024-10-16
+ * @date 2025-10-25
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 #include "app_neopixel.hpp"
@@ -21,7 +21,7 @@ static uint8_t s_brightness = 0; // 明るさ
 static bool s_onoff = false;     // 消灯=false, 点灯=ture
 static bool s_autoled = false;   // 手動=false, 自動=ture
 
-Adafruit_NeoPixel pixels(RGBLED_NUM,
+Adafruit_NeoPixel g_pixel(RGBLED_NUM,
                         RGBLED_PIN,
                         NEO_GRB + NEO_KHZ800);
 
@@ -31,9 +31,9 @@ Adafruit_NeoPixel pixels(RGBLED_NUM,
  */
 void app_neopixel_init(void)
 {
-    pixels.begin();
-    pixels.clear();
-    pixels.show();
+    g_pixel.begin();
+    g_pixel.clear();
+    g_pixel.show();
 }
 
 /**
@@ -49,8 +49,8 @@ static void rgbled_fade(void)
     {
         for(cnt = 0; cnt < RGBLED_NUM; cnt++)
         {
-            pixels.setPixelColor(cnt, pixels.Color(s_red, s_green, s_blue));
-            pixels.show();
+            g_pixel.setPixelColor(cnt, g_pixel.Color(s_red, s_green, s_blue));
+            g_pixel.show();
         }
         s_green++;
         s_red--;
@@ -62,8 +62,8 @@ static void rgbled_fade(void)
     {
         for(cnt = 0; cnt < RGBLED_NUM; cnt++)
         {
-            pixels.setPixelColor(cnt, pixels.Color(s_red, s_green, s_blue));
-            pixels.show();
+            g_pixel.setPixelColor(cnt, g_pixel.Color(s_red, s_green, s_blue));
+            g_pixel.show();
         }
         s_blue++;
         s_green--;
@@ -75,14 +75,28 @@ static void rgbled_fade(void)
     {
         for(cnt = 0; cnt < RGBLED_NUM; cnt++)
         {
-            pixels.setPixelColor(cnt, pixels.Color(s_red, s_green, s_blue));
-            pixels.show();
+            g_pixel.setPixelColor(cnt, g_pixel.Color(s_red, s_green, s_blue));
+            g_pixel.show();
         }
         s_red++;
         s_blue--;
         delay(LED_COLOR_ON_TIMER);
     }
     s_blue = 0;
+}
+
+/**
+ * @brief 指定のNeopixelの色を設定
+ * 
+ * @param led_no Neopixelの指定
+ * @param red 赤色
+ * @param blue 青色
+ * @param green 緑
+ */
+void app_neopixel_set_color(uint8_t led_no, uint8_t red, uint8_t blue, uint8_t green)
+{
+    g_pixel.setPixelColor(led_no, g_pixel.Color(red, green, blue));
+    g_pixel.show();
 }
 
 /**
@@ -106,11 +120,11 @@ void app_neopixel_main(uint8_t red,uint8_t green, uint8_t blue, uint8_t brightne
 
     if(s_autoled != true){
         if (s_onoff != false) {
-            pixels.setPixelColor(0, pixels.Color(s_red, s_green, s_blue));
-            pixels.show();
+            g_pixel.setPixelColor(0, g_pixel.Color(s_red, s_green, s_blue));
+            g_pixel.show();
         }else{
-            pixels.clear();
-            pixels.show();
+            g_pixel.clear();
+            g_pixel.show();
         }
     }else{
         rgbled_fade();

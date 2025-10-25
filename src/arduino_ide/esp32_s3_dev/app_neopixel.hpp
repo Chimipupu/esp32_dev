@@ -1,11 +1,11 @@
 /**
  * @file app_neopixel.hpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief NeoPixelアプリ
  * @version 0.1
- * @date 2024-10-16
+ * @date 2025-10-25
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 #ifndef APP_NEOPIXEL_HPP
@@ -24,6 +24,7 @@ typedef struct {
 } rgbled_state_t;
 
 void app_neopixel_init(void);
+void app_neopixel_set_color(uint8_t led_no, uint8_t red, uint8_t blue, uint8_t green);
 void app_neopixel_main(uint8_t red,uint8_t green, uint8_t blue, uint8_t brightness, bool onoff, bool autoled);
 
 #endif /* APP_NEOPIXEL_HPP */

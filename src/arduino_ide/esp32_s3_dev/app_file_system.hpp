@@ -1,11 +1,11 @@
 /**
  * @file app_file_system.hpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief ファイルシステム ヘッダ
  * @version 0.1
  * @date 2024-10-19
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 

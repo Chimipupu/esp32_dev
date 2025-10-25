@@ -1,11 +1,11 @@
 /**
  * @file app_main_core0.cpp
- * @author ちみ/Chimi(https://github.com/Chimipupu)
+ * @author Chimipupu(https://github.com/Chimipupu)
  * @brief  Core1 アプリ
  * @version 0.1
- * @date 2024-10-16
+ * @date 2025-10-25
  * 
- * @copyright Copyright (c) 2024 ちみ/Chimi(https://github.com/Chimipupu)
+ * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
  */
 
@@ -138,9 +138,6 @@ void app_main_init_core1(void)
 
     // ボタン
     app_btn_init();
-
-    // RGB LED (NeoPixel)
-    app_neopixel_init();
 
     // Deep Sleep
     // esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
