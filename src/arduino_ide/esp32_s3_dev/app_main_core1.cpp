@@ -124,19 +124,22 @@ void app_main_init_core1(void)
 {
     xSerialMutex = xSemaphoreCreateMutex();
 
-    // UART
+    // UART初期化
     Serial.begin(115200);
     while (!Serial) {
         WDT_TOGGLE;
     }
 
 #ifdef YD_ESP32_S3
-    // PSRAM
+    // PSRAM初期化
     app_fs_psram_init();
     app_fs_psram_test();
 #endif /* YD_ESP32_S3 */
 
-    // ボタン
+    // NeoPixel初期化
+    app_neopixel_init();
+
+    // ボタン初期化
     app_btn_init();
 
     // Deep Sleep

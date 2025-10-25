@@ -12,28 +12,29 @@
 #include "common.hpp"
 #include "app_main_core0.hpp"
 
-void core0RgbLedTask(void *p_parameter)
+static xTaskHandle s_xTaskCore0Main;
+
+void vTaskCore0Main(void *p_parameter)
 {
-    DEBUG_PRINTF_RTOS("[Core0] ... core0RgbLedTask\n");
-    app_neopixel_init();
-    app_neopixel_set_color(0x00, 0xFF, 0x00, 0x00); // 赤色
+    DEBUG_PRINTF_RTOS("[Core0] ... vTaskCore0Main\n");
 
     while (1)
     {
+        // TODO
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 
 void app_main_init_core0(void)
 {
-#if 1
+#if 0
     // FreeRTOS
-    xTaskCreatePinnedToCore(core0RgbLedTask,   // コールバック関数ポインタ
-                            "core0RgbLedTask", // タスク名
+    xTaskCreatePinnedToCore(vTaskCore0Main,   // コールバック関数ポインタ
+                            "vTaskCore0Main", // タスク名
                             4096,               // スタック
                             NULL,              // パラメータ
                             0,                 // 優先度(0～7、7が最優先)
-                            NULL,              // ハンドル
+                            &s_xTaskCore0Main, // ハンドル
                             CPU_CORE_0);       // Core0 or Core1
 #endif
 }
