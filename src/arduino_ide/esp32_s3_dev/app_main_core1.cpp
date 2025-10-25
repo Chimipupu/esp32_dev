@@ -23,18 +23,17 @@ static bool s_espnow_flag = true;
 
 static xTaskHandle s_xTaskCore1Btn;
 static xTaskHandle s_xTaskCore1WiFi;
-static xTaskHandle s_xTaskCore1Main;
+// static xTaskHandle s_xTaskCore1Main;
 static bool s_wifi_flag = true;
 
 void vTaskCore1Btn(void *p_parameter)
 {
-    ButtonState btnstate;
     DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Btn\n");
 
     while (1)
     {
-        app_btn_polling(btnstate);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        app_btn_polling();
+        vTaskDelay(300 / portTICK_PERIOD_MS);
     }
 }
 
@@ -90,6 +89,7 @@ void vTaskCore1WiFi(void *p_parameter)
 }
 #endif /* __WIFI_ENABLE__ */
 
+#if 0
 void vTaskCore1Main(void *p_parameter)
 {
     // DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
@@ -111,14 +111,12 @@ void vTaskCore1Main(void *p_parameter)
         }
         vTaskDelay(200 / portTICK_PERIOD_MS);
 #else
-        DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
-    #ifdef YD_ESP32_S3
-        // NOP
-    #endif /* YD_ESP32_S3 */
+        // DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 #endif
     }
 }
+#endif
 
 void app_main_init_core1(void)
 {
@@ -130,11 +128,9 @@ void app_main_init_core1(void)
         WDT_TOGGLE;
     }
 
-#ifdef YD_ESP32_S3
     // PSRAM初期化
     app_fs_psram_init();
     app_fs_psram_test();
-#endif /* YD_ESP32_S3 */
 
     // NeoPixel初期化
     app_neopixel_init();
@@ -143,10 +139,10 @@ void app_main_init_core1(void)
     app_btn_init();
 
     // Deep Sleep
-    // esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
+    esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
-#if 0
     // FreeRTOS
+#if 1
     xTaskCreatePinnedToCore(vTaskCore1Btn,     // コールバック関数ポインタ
                             "vTaskCore1Btn",   // タスク名
                             4096,              // スタック
@@ -161,28 +157,30 @@ void app_main_init_core1(void)
                             "vTaskCore1EspNow", // タスク名
                             8192,              // スタック
                             NULL,              // パラメータ
-                            4,                 // 優先度(0～7、7が最優先)
+                            5,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1EspNow, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 #endif /* __ESP_NOW_ENABLE__ */
 
 #ifdef __WIFI_ENABLE__
-    xTaskCreatePinnedToCore(vTaskCore1WiFi,     // コールバック関数ポインタ
-                            "vTaskCore1WiFi",   // タスク名
-                            8192,              // スタック
+    xTaskCreatePinnedToCore(vTaskCore1WiFi,    // コールバック関数ポインタ
+                            "vTaskCore1WiFi",  // タスク名
+                            16384,             // スタック
                             NULL,              // パラメータ
-                            3,                 // 優先度(0～7、7が最優先)
+                            6,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1WiFi, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
 #endif /* __WIFI_ENABLE__ */
 
+#if 0
     xTaskCreatePinnedToCore(vTaskCore1Main,   // コールバック関数ポインタ
                             "vTaskCore1Main", // タスク名
-                            16384,              // スタック
+                            4096,              // スタック
                             NULL,              // パラメータ
-                            6,                 // 優先度(0～7、7が最優先)
+                            3,                 // 優先度(0～7、7が最優先)
                             &s_xTaskCore1Main, // ハンドル
                             CPU_CORE_1);       // Core0 or Core1
+#endif
 }
 
 void app_main_core1(void)

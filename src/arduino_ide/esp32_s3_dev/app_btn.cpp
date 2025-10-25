@@ -11,7 +11,7 @@
 
 #include "app_btn.hpp"
 
-ButtonState s_buttonState = {false, 0, 0, 0, 0, false, NONE};
+ButtonState s_btn_staate = {false, 0, 0, 0, 0, false, NONE};
 
 /**
  * @brief ボタン割り込みハンドラ
@@ -19,76 +19,75 @@ ButtonState s_buttonState = {false, 0, 0, 0, 0, false, NONE};
  */
 void IRAM_ATTR buttonISR()
 {
-    __DI_ISR(&g_mux);
-    bool currentState = digitalRead(BUTTON_PIN) == LOW;
-    unsigned long currentTime = millis();
+    __DI_ISR(&g_mux); // 割り込みマスク
 
-    if (currentState != s_buttonState.isPressed) {
-        s_buttonState.isPressed = currentState;
-        if (currentState) {
-            if (!s_buttonState.processingClicks ||
-                (currentTime - s_buttonState.lastReleaseTime <= CLICK_TIMEOUT)) {
-                s_buttonState.clickCount = s_buttonState.clickCount + 1;
-                s_buttonState.processingClicks = true;
+    bool btn_state = false;
+    unsigned long current_time_ms = 0;
+
+    current_time_ms = millis();
+    btn_state = digitalRead(BUTTON_PIN);
+
+    if (btn_state != s_btn_staate.isPressed) {
+        s_btn_staate.isPressed = btn_state;
+        if (btn_state) {
+            if (!s_btn_staate.processingClicks ||
+                (current_time_ms - s_btn_staate.lastReleaseTime <= CLICK_TIMEOUT)) {
+                s_btn_staate.clickCount = s_btn_staate.clickCount + 1;
+                s_btn_staate.processingClicks = true;
             } else {
-                s_buttonState.clickCount = 1;
+                s_btn_staate.clickCount = 1;
             }
-            s_buttonState.lastClickTime = currentTime;
-            s_buttonState.currentPressType = NORMAL_PRESS;
+            s_btn_staate.lastClickTime = current_time_ms;
+            s_btn_staate.currentPressType = NORMAL_PRESS;
         } else {
-            s_buttonState.lastReleaseTime = currentTime;
+            s_btn_staate.lastReleaseTime = current_time_ms;
 
-            if (s_buttonState.currentPressType == NORMAL_PRESS) {
-                s_buttonState.processingClicks = true;
+            if (s_btn_staate.currentPressType == NORMAL_PRESS) {
+                s_btn_staate.processingClicks = true;
             } else {
-                s_buttonState.clickCount = 0;
-                s_buttonState.processingClicks = false;
+                s_btn_staate.clickCount = 0;
+                s_btn_staate.processingClicks = false;
             }
-            s_buttonState.currentPressType = NONE;
+            s_btn_staate.currentPressType = NONE;
         }
     }
-    __EI_ISR(&g_mux);
+
+    __EI_ISR(&g_mux); // 割り込み許可
 }
 
 /**
  * @brief ボタンポーリング処理
  * 
  */
-void app_btn_polling(ButtonState btnstate)
+void app_btn_polling(void)
 {
-    __DI(&g_mux);
-
-    unsigned long currentTime = millis();
-    bool isPressed = s_buttonState.isPressed;
-    unsigned long pressTime = currentTime - s_buttonState.lastClickTime;
-    PressType pressType = s_buttonState.currentPressType;
+    unsigned long current_time_ms = millis();
+    bool isPressed = s_btn_staate.isPressed;
+    unsigned long pressTime = current_time_ms - s_btn_staate.lastClickTime;
+    PressType pressType = s_btn_staate.currentPressType;
 
     if (isPressed && pressType != VERY_LONG_PRESS) {
         if (pressTime >= VERY_LONG_PRESS_TIME && pressType != VERY_LONG_PRESS) {
-            s_buttonState.currentPressType = VERY_LONG_PRESS;
-            __EI(&g_mux);
+            s_btn_staate.currentPressType = VERY_LONG_PRESS;
             DEBUG_PRINTF_RTOS("超長押し検出\n");
             return;
         } else if (pressTime >= LONG_PRESS_TIME && pressType == NORMAL_PRESS) {
-            s_buttonState.currentPressType = LONG_PRESS;
-            __EI(&g_mux);
+            s_btn_staate.currentPressType = LONG_PRESS;
             DEBUG_PRINTF_RTOS("長押し検出\n");
             return;
         }
     }
 
-    bool shouldProcessClicks = s_buttonState.processingClicks &&
+    bool shouldProcessClicks = s_btn_staate.processingClicks &&
                                 !isPressed &&
-                                (currentTime - s_buttonState.lastReleaseTime > RESET_TIMEOUT);
+                                (current_time_ms - s_btn_staate.lastReleaseTime > RESET_TIMEOUT);
 
     if (shouldProcessClicks) {
-        uint32_t clicks = s_buttonState.clickCount;
-        s_buttonState.lastclickCount = s_buttonState.clickCount;
-        s_buttonState.clickCount = 0;
-        s_buttonState.processingClicks = false;
-        btnstate = s_buttonState;
-        // s_buttonState.currentPressType = MULTI_PRESS;
-        __EI(&g_mux);
+        uint32_t clicks = s_btn_staate.clickCount;
+        s_btn_staate.lastclickCount = s_btn_staate.clickCount;
+        s_btn_staate.clickCount = 0;
+        s_btn_staate.processingClicks = false;
+        // s_btn_staate.currentPressType = MULTI_PRESS;
 
         switch (clicks) {
             case 1:
@@ -107,9 +106,6 @@ void app_btn_polling(ButtonState btnstate)
                 }
                 break;
         }
-    }else{
-        btnstate = s_buttonState;
-        __EI(&g_mux);
     }
 }
 

@@ -39,9 +39,7 @@ static void heap_print(uint8_t type)
 void app_fs_info(void)
 {
     heap_print(HEAP_SRAM);
-#ifdef YD_ESP32_S3
     heap_print(HEAP_PSRAM);
-#endif /* YD_ESP32_S3 */
 }
 
 /**
@@ -72,7 +70,6 @@ void* app_fs_heap_malloc(size_t size, uint8_t type)
     return p_malloc;
 }
 
-#ifdef YD_ESP32_S3
 /**
  * @brief PSRAMの初期化
  * 
@@ -98,15 +95,10 @@ void app_fs_psram_test(void)
         DEBUG_PRINTF_RTOS("[PSRAM Test]\n");
         heap_print(HEAP_PSRAM);
         DEBUG_PRINTF_RTOS("PSRAM malloc size = %d byte\n", PSRAM_MALLOC_TEST_SIZE);
-#if 1
         void *p_pram_val = app_fs_heap_malloc(PSRAM_MALLOC_TEST_SIZE, HEAP_PSRAM);
-#else
-        void *p_pram_val = heap_caps_malloc(PSRAM_MALLOC_TEST_SIZE, MALLOC_CAP_SPIRAM);
-#endif
         heap_print(HEAP_PSRAM);
         DEBUG_PRINTF_RTOS("PSRAM malloc free\n");
         free(p_pram_val);
         heap_print(HEAP_PSRAM);
     }
 }
-#endif /* YD_ESP32_S3 */

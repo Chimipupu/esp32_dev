@@ -15,7 +15,6 @@
 #include "common.hpp"
 
 #ifdef __WIFI_ENABLE__
-#if 1
 const char *p_settingsHTML = R"(
 <!DOCTYPE html>
 <html>
@@ -79,7 +78,6 @@ const char *p_settingsHTML = R"(
 </body>
 </html>
 )";
-#endif
 
 const char *p_indexHTML = R"(
 <!DOCTYPE html>

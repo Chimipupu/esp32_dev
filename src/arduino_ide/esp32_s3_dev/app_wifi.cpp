@@ -32,6 +32,10 @@ const char *ntpServer = "ntp.nict.jp";
 const long gmtOffset_sec = 9 * 3600; // 日本時間 (UTC+9)
 const int daylightOffset_sec = 0;
 
+// SSID、パスワード
+uint8_t *p_wifi_ssid = NULL;
+uint8_t *p_wifi_password = NULL;
+
 typedef enum {
     INDEX = 0,
     FACTOCY_CONFIG = 0x20,
@@ -46,7 +50,7 @@ static bool s_wifi_flag = false;
 static bool s_ap_flg = false;
 static bool s_ftp_flg = false;
 
-static bool loadWiFiConfig(void);
+static bool fs_read_wifi_config(void);
 static void saveWiFiConfig(const String &ssid, const String &password);
 static void setupAP(void);
 static void handleRoot(void);
@@ -58,9 +62,9 @@ static void wifi_off_online_proc(void);
 static void ap_mode_main(void);
 static void sta_mode_main(void);
 
-WiFiConfig config;
+WiFiConfig g_wifi_config;
 
-static bool loadWiFiConfig(void)
+static bool fs_read_wifi_config(void)
 {
     File configFile = FILE_SYSTEM.open(CONFIG_FILE, "r");
     if (!configFile)
@@ -79,8 +83,8 @@ static bool loadWiFiConfig(void)
         return false;
     }
 
-    config.ssid = doc["ssid"].as<String>();
-    config.password = doc["password"].as<String>();
+    g_wifi_config.ssid = doc["ssid"].as<String>();
+    g_wifi_config.password = doc["password"].as<String>();
     DEBUG_PRINTF_RTOS("WiFi設定を読み込みました\n");
     return true;
 }
@@ -191,13 +195,11 @@ static void set_ntp_to_rtc_time(void)
 
     DEBUG_PRINTF_RTOS("NTPとRTCを同期開始\n");
 
-    __DI(&g_mux);
     strftime(timeStr, sizeof(timeStr), "NTP: %Y/%m/%d %H:%M:%S", &s_ntp_timeinfo_t);
     time_t now;
     time(&now);
     struct timeval tv = {.tv_sec = now, .tv_usec = 0};
     settimeofday(&tv, NULL);
-    __EI(&g_mux);
 
     DEBUG_PRINTF_RTOS("NTPとRTCを同期完了\n");
     time_show(NTP_TIME);
@@ -213,14 +215,18 @@ static void wifi_online_proc(void)
         app_ftp_main();
 #endif
     } else {
-        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
+        p_wifi_ssid     = (uint8_t *)g_wifi_config.ssid.c_str();
+        p_wifi_password = (uint8_t *)g_wifi_config.password.c_str();
+        DEBUG_PRINTF_RTOS("STA SSID : %s\n", p_wifi_ssid);
+        DEBUG_PRINTF_RTOS("STA Password : %s\n", p_wifi_password);
+        app_neopixel_main(16, 16, 16, 0, true, false); // White, on
     }
 }
 
 static void wifi_off_online_proc(void)
 {
     if(s_ap_flg != false){
-        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+        app_neopixel_main(0, 0, 16, 0, true, false); // blue, on
     }else{
         app_neopixel_main(16, 0, 0, 0, true, false); // red, on
     }
@@ -230,9 +236,9 @@ static void sta_mode_main(void)
 {
     DEBUG_PRINTF_RTOS("STAモードで接続を試みます\n");
     WiFi.mode(WIFI_STA);
-    DEBUG_PRINTF_RTOS("STA SSID : %s\n", config.ssid.c_str());
-    DEBUG_PRINTF_RTOS("STA Password : %s\n", config.password.c_str());
-    WiFi.begin(config.ssid.c_str(), config.password.c_str());
+    DEBUG_PRINTF_RTOS("STA SSID : %s\n", g_wifi_config.ssid.c_str());
+    DEBUG_PRINTF_RTOS("STA Password : %s\n", g_wifi_config.password.c_str());
+    WiFi.begin(g_wifi_config.ssid.c_str(), g_wifi_config.password.c_str());
 
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 30)
@@ -255,11 +261,9 @@ static void sta_mode_main(void)
         DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", str.c_str());
 
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
-        // __DI(&g_mux);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-        // __EI(&g_mux);
 
         set_ntp_to_rtc_time();
 
@@ -269,17 +273,21 @@ static void sta_mode_main(void)
         server.begin();
         server.handleClient();
 
-#ifdef YD_ESP_S3
-    #ifdef __FTP_ENABLE__
+#ifdef __FTP_ENABLE__
         // FTP Server
         app_ftp_init();
         s_ftp_flg = true;
-    #endif // __FTP_ENABLE__
-#else
+#endif // __FTP_ENABLE__
+
+#if 0
+        // WiFi切断
         DEBUG_PRINTF_RTOS("WiFiから切断\n");
         WiFi.disconnect();
         s_wifi_flag = false;
-#endif /* YD_ESP_S3 */
+#else
+        // WiFiの接続を継続
+        s_wifi_flag = true;
+#endif
     } else {
         s_wifi_flag = true;
         ap_mode_main();
@@ -346,7 +354,7 @@ void app_wifi_init(void)
     app_wifi_scan();
 
     DEBUG_PRINTF_RTOS("WiFi設定をファイルシステムから読み込み中...\n");
-    if (loadWiFiConfig() && config.ssid.length() > 0) {
+    if (fs_read_wifi_config() && g_wifi_config.ssid.length() > 0) {
         sta_mode_main();
     } else {
         s_wifi_flag = true;

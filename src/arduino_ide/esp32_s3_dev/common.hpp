@@ -28,12 +28,8 @@
 
 #define __WIFI_ENABLE__
 // #define __FTP_ENABLE__
-
-// #define ATOM_S3
-// #define ATOM_S3_LITE
-#define YD_ESP_S3
-
 // #define __ESP_NOW_ENABLE__
+
 #if defined(__WIFI_ENABLE__) && defined(__ESP_NOW_ENABLE__)
     #define ESP_NOW_TX
     // #define ESP_NOW_RX
@@ -42,20 +38,9 @@
 // #define FILESYSTEM_RESET
 // #define DEEP_SLEEP_ENABLE
 
-#define YD_ESP32_S3
-#if !defined(ATOM_S3_LITE) && !defined(YD_ESP32_S3)
-#include <M5AtomS3.h>
-#define ATOM_S3_LITE
-#endif
-
 // GPIO
-#ifdef YD_ESP32_S3
 #define RGBLED_PIN        48   // YD-ESP32-S3 RGBLED @GPIO 48
 #define BUTTON_PIN        46   // YD-ESP32-S3e Button @GPIO 41
-#else
-#define RGBLED_PIN        35   // Atom S3 Lite RGBLED @GPIO 35
-#define BUTTON_PIN        41   // Atom S3 Lite Button @GPIO 41
-#endif
 
 // 割込みマスク・許可
 #define __DI            portENTER_CRITICAL

@@ -55,7 +55,6 @@ static void rx_proc_main(void);
 
 void tx_proc_cbk(const uint8_t *p_mac_addr, esp_now_send_status_t status)
 {
-    __DI(&g_mux);
     snprintf(s_src_mac_str_buf, sizeof(s_src_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
             s_my_mac_addr[0], s_my_mac_addr[1], s_my_mac_addr[2],
             s_my_mac_addr[3], s_my_mac_addr[4], s_my_mac_addr[5]);
@@ -64,12 +63,10 @@ void tx_proc_cbk(const uint8_t *p_mac_addr, esp_now_send_status_t status)
             p_mac_addr[0], p_mac_addr[1], p_mac_addr[2], p_mac_addr[3], p_mac_addr[4], p_mac_addr[5]);
 
     s_tx_status = status;
-    __EI(&g_mux);
 }
 
 void rx_proc_cbk(const esp_now_recv_info_t *p_info, const uint8_t *p_data, int data_len)
 {
-    __DI(&g_mux);
     memcpy(s_src_mac_addr, p_info->src_addr, 6);
     memcpy(s_des_mac_addr, p_info->des_addr, 6);
 
@@ -93,8 +90,6 @@ void rx_proc_cbk(const esp_now_recv_info_t *p_info, const uint8_t *p_data, int d
         p_data++;
     }
     s_is_rx_data = true;
-
-    __EI(&g_mux);
 }
 
 static void slave_addr_update(uint8_t *p_macaddr)
@@ -171,7 +166,6 @@ static void rx_proc_main(void)
 
 static void tx_data_create(uint8_t *p_data, uint8_t data_len)
 {
-    __DI(&g_mux);
     s_tx_data_len = 0;
     memset(&s_tx_data_buf, 0x00, sizeof(s_tx_data_buf));
     for (uint8_t i = 0; i < data_len; i++)
@@ -180,7 +174,6 @@ static void tx_data_create(uint8_t *p_data, uint8_t data_len)
         p_data++;
         s_tx_data_len++;
     }
-    __EI(&g_mux);
 }
 
 static void tx_data_print(void)
@@ -306,7 +299,6 @@ void app_espnow_init(void)
     // app_wifi_scan();
 
     // ブロードキャスト = MACアドレス FF:FF:FF:FF:FF:FF
-    __DI(&g_mux);
     memset(&s_peer_info, 0, sizeof(s_peer_info));
     memset(&s_slave_mac_addr, 0xff, sizeof(s_slave_mac_addr));
     memcpy(s_peer_info.peer_addr, s_slave_mac_addr, 6);
@@ -315,7 +307,6 @@ void app_espnow_init(void)
     snprintf(s_slave_mac_str_buf, sizeof(s_slave_mac_str_buf), "%02x:%02x:%02x:%02x:%02x:%02x",
             s_slave_mac_addr[0], s_slave_mac_addr[1], s_slave_mac_addr[2],
             s_slave_mac_addr[3], s_slave_mac_addr[4], s_slave_mac_addr[5]);
-    __EI(&g_mux);
 
     esp_err_t addStatus = esp_now_add_peer(&s_peer_info);
     if (addStatus == ESP_OK) {

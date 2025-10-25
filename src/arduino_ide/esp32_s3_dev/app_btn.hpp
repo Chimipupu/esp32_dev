@@ -45,6 +45,6 @@ struct ButtonState
 extern portMUX_TYPE g_mux;
 
 void app_btn_init(void);
-void app_btn_polling(ButtonState btnstate);
+void app_btn_polling(void);
 
 #endif /* APP_BTN_HPP */

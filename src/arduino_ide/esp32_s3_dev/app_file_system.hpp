@@ -19,16 +19,11 @@
 #define PSRAM_MALLOC_TEST_SIZE    32
 
 #ifndef FILE_SYSTEM
-    #ifdef YD_ESP32_S3
-        #include "FS.h"
-        #include "FFat.h"
-        #define FILE_SYSTEM     FFat
-        void app_fs_psram_init(void);
-        void app_fs_psram_test(void);
-    #else
-        #include "SPIFFS.h"
-        #define FILE_SYSTEM     SPIFFS
-        #endif /* YD_ESP32_S3 */
+    #include "FS.h"
+    #include "FFat.h"
+    #define FILE_SYSTEM     FFat
+    void app_fs_psram_init(void);
+    void app_fs_psram_test(void);
 #endif /* FILE_SYSTEM */
 
 void app_fs_info(void);

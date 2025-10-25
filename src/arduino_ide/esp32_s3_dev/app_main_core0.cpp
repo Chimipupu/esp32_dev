@@ -12,6 +12,7 @@
 #include "common.hpp"
 #include "app_main_core0.hpp"
 
+#if 0
 static xTaskHandle s_xTaskCore0Main;
 
 void vTaskCore0Main(void *p_parameter)
@@ -24,6 +25,7 @@ void vTaskCore0Main(void *p_parameter)
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
+#endif
 
 void app_main_init_core0(void)
 {
