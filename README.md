@@ -1,12 +1,19 @@
-# 📍ESP32-S3 評価F/W開発
-📍ESP32-S3の評価F/W個人開発リポジトリ🥳
+# ESP32 WiFi 評価F/W開発
+ESP32のWiFi評価F/W個人開発リポジトリ
 
 - 📍ESP32-S3
-  - 📍CPU0 ... Xtensa LX7
-  - 📍CPU1 ... Xtensa LX7
-  - 🛜WiFi ... 2.4GHz
-  - 🛜Bluetooth ... BLE5, Mesh
-  - 🛜ESP-NOW
+  - 型番 : [ESP32S3N16R8ESP32-S3-WROOM-1-N16R8](https://akizukidenshi.com/catalog/g/g117256/)🔗
+    - 📍CPU0 ... Xtensa LX7
+    - 📍CPU1 ... Xtensa LX7
+    - クロック ... 240MHz
+    - 💾Flash ... 16MB
+    - 💾RAM
+      - SRAM ... 520KB
+      - RTC Slow Mem ... 16KB
+      - PSRAM ... 8MB
+    - 🛜WiFi ... IEEE802.11 b/g/n @2.4GHz
+      - 🛜ESP-NOW
+    - 🛜Bluetooth ... BLE 5、Mesh
 
 - 📍OS ... FreeRTOS
   - 📍CPU0 ... ✅FreeRTOS(搭載済み)
@@ -18,12 +25,12 @@
 
 ## 📍開発環境
 
-- 📍[Arduino IDE v2.33](https://github.com/arduino/arduino-ide/releases/tag/2.3.3)
-  - [Arduino core for the esp32 v3.0.7🔗](https://github.com/espressif/arduino-esp32/releases/tag/3.0.7)
+- 📍[Arduino IDE v2.36](https://github.com/arduino/arduino-ide/releases/tag/2.3.6)
+  - [arduino-esp32 v3.3.2](https://github.com/espressif/arduino-esp32/releases/tag/3.3.2)🔗
 - 📍基板
   - ESP32-S3
-    - [VCC-GND YD-ESP32-S3🔗](https://github.com/vcc-gnd/YD-ESP32-S3)
-    - [M5Stack Atom S3 Lite🔗](https://docs.m5stack.com/en/core/AtomS3%20Lite)
+    - [VCC-GND YD-ESP32-S3](https://github.com/vcc-gnd/YD-ESP32-S3)🔗
+    - [M5Stack Atom S3 Lite](https://docs.m5stack.com/en/core/AtomS3%20Lite)🔗
 
 ****
 
@@ -47,9 +54,9 @@
       - ✅AP🛜
         - ✅HTTP : HTMLでSTAのSSIDとパスワード入力受け
       - ✅STA🛜
-        - ✅FTP : FATFSでフラッシュにファイルをR/W
-        - ✅NTP : RTCと同期
         - ✅HTTP : HTMLに各種データのI/O
+        - ✅NTP : RTCと同期
+        - ✅FTP : FATFSでフラッシュにファイルをR/W
 
 - 📍RGB LED (@GPIO 35)
   - ✅赤🔴 : オフライン状態（WiFi未接続）

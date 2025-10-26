@@ -32,7 +32,9 @@ const char *ntpServer = "ntp.nict.jp";
 const long gmtOffset_sec = 9 * 3600; // 日本時間 (UTC+9)
 const int daylightOffset_sec = 0;
 
-// SSID、パスワード
+// IP/MAC Addr、SSID、パスワード
+uint8_t *p_ip_addr = NULL;
+uint8_t *p_mac_addr = NULL;
 uint8_t *p_wifi_ssid = NULL;
 uint8_t *p_wifi_password = NULL;
 
@@ -61,8 +63,25 @@ static void wifi_online_proc(void);
 static void wifi_off_online_proc(void);
 static void ap_mode_main(void);
 static void sta_mode_main(void);
+static void connect_info_print(void);
 
 WiFiConfig g_wifi_config;
+
+/**
+ * @brief 接続情報表示（IP、MACアドレス、SSID、パスワード）
+ * 
+ */
+static void connect_info_print(void)
+{
+    p_ip_addr  = (uint8_t *)WiFi.localIP().toString().c_str();
+    p_mac_addr = (uint8_t *)WiFi.macAddress().c_str();
+    p_wifi_ssid     = (uint8_t *)g_wifi_config.ssid.c_str();
+    p_wifi_password = (uint8_t *)g_wifi_config.password.c_str();
+    DEBUG_PRINTF_RTOS("IP addr : %s\n",p_ip_addr );
+    DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", p_mac_addr);
+    DEBUG_PRINTF_RTOS("STA SSID : %s\n", p_wifi_ssid);
+    DEBUG_PRINTF_RTOS("STA Password : %s\n", p_wifi_password);
+}
 
 static bool fs_read_wifi_config(void)
 {
@@ -210,25 +229,22 @@ static void wifi_online_proc(void)
 {
     if(s_ftp_flg != false)
     {
-        app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
 #ifdef __FTP_ENABLE__
         app_ftp_main();
 #endif
     } else {
-        p_wifi_ssid     = (uint8_t *)g_wifi_config.ssid.c_str();
-        p_wifi_password = (uint8_t *)g_wifi_config.password.c_str();
-        DEBUG_PRINTF_RTOS("STA SSID : %s\n", p_wifi_ssid);
-        DEBUG_PRINTF_RTOS("STA Password : %s\n", p_wifi_password);
-        app_neopixel_main(16, 16, 16, 0, true, false); // White, on
+        connect_info_print();
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_WHITE]);
     }
 }
 
 static void wifi_off_online_proc(void)
 {
     if(s_ap_flg != false){
-        app_neopixel_main(0, 0, 16, 0, true, false); // blue, on
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
     }else{
-        app_neopixel_main(16, 0, 0, 0, true, false); // red, on
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_RED]);
     }
 }
 
@@ -253,12 +269,10 @@ static void sta_mode_main(void)
     if (WiFi.status() == WL_CONNECTED)
     {
         s_wifi_flag = true;
-        app_neopixel_main(0, 16, 0, 0,true, false); // green, on
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_GREEN]);
 
         DEBUG_PRINTF_RTOS("\nWiFi接続完了!\n");
-        DEBUG_PRINTF_RTOS("IP addr : %s\n", WiFi.localIP().toString().c_str());
-        String str = WiFi.macAddress();
-        DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", str.c_str());
+        connect_info_print();
 
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -297,7 +311,7 @@ static void sta_mode_main(void)
 static void ap_mode_main(void)
 {
     s_ap_flg = true;
-    app_neopixel_main(0, 0, 16, 0,true, false); // blue, on
+    app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
 
     setupAP();
 

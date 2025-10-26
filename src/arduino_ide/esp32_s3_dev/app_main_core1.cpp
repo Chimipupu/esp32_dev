@@ -33,7 +33,7 @@ void vTaskCore1Btn(void *p_parameter)
     while (1)
     {
         app_btn_polling();
-        vTaskDelay(300 / portTICK_PERIOD_MS);
+        vTaskDelay(800 / portTICK_PERIOD_MS);
     }
 }
 
@@ -72,7 +72,7 @@ void vTaskCore1WiFi(void *p_parameter)
 #endif /* __ESP_NOW_ENABLE__ */
 
     DEBUG_PRINTF_RTOS("[Core1] vTaskCore1WiFi\n");
-    app_neopixel_main(16, 0, 0, 0, true, false); // red
+    app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_RED]);
     app_wifi_init();
 
     while (1)
@@ -84,7 +84,7 @@ void vTaskCore1WiFi(void *p_parameter)
             vTaskSuspend(NULL);
             DEBUG_PRINTF_RTOS("[Core1] vTaskCore1WiFi Resume!\n");
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 #endif /* __WIFI_ENABLE__ */
@@ -103,7 +103,7 @@ void vTaskCore1Main(void *p_parameter)
             uint32_t dat = (DEEPSLEEP_TIME_US / 60) / 1000000;
             DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main ... No Proc. DeepSleep Now!\n");
             DEBUG_PRINTF_RTOS("DeepSleep : %d min\n", dat);
-            app_neopixel_main(16, 0, 16, 0, true, false); // 紫
+            app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_PURPLE]);
             esp_deep_sleep_start();
         } else {
             // TODO: Core1メインタスクの処理実装

@@ -275,11 +275,11 @@ void app_espnow_init(void)
 
 #ifdef ESP_NOW_TX
     DEBUG_PRINTF_RTOS("ESPNow TX\n");
-    app_neopixel_main(16, 16, 16, 0, true, false); // 白 = ESPNOW 送信側
+    app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_WHITE]);
     s_tx_data_type = ANY_ONE;
 #else
     DEBUG_PRINTF_RTOS("ESPNow RX\n");
-    app_neopixel_main(16, 6, 0, 0, true, false); // オレンジ = ESPNOW 受信側
+    app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_ORANGE]);
 #endif /* ESP_NOW_TX */
 
     WiFi.mode(WIFI_STA);

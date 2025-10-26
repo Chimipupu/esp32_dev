@@ -3,7 +3,7 @@
  * @author Chimipupu(https://github.com/Chimipupu)
  * @brief ファイルシステム　アプリ
  * @version 0.1
- * @date 2024-12-13
+ * @date 2025-10-26
  * 
  * @copyright Copyright (c) 2025 Chimipupu All Rights Reserved.
  * 
@@ -12,7 +12,14 @@
 #include "app_file_system.hpp"
 
 static bool s_is_psram = false;
+
 static void heap_print(uint8_t type);
+
+/**
+ * @brief ヒープ情報printf()
+ * 
+ * @param type SRAM or PSRAM
+ */
 static void heap_print(uint8_t type)
 {
     switch (type)
@@ -94,11 +101,13 @@ void app_fs_psram_test(void)
     if (s_is_psram) {
         DEBUG_PRINTF_RTOS("[PSRAM Test]\n");
         heap_print(HEAP_PSRAM);
+
         DEBUG_PRINTF_RTOS("PSRAM malloc size = %d byte\n", PSRAM_MALLOC_TEST_SIZE);
         void *p_pram_val = app_fs_heap_malloc(PSRAM_MALLOC_TEST_SIZE, HEAP_PSRAM);
         heap_print(HEAP_PSRAM);
         DEBUG_PRINTF_RTOS("PSRAM malloc free\n");
         free(p_pram_val);
+
         heap_print(HEAP_PSRAM);
     }
 }
