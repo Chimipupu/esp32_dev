@@ -33,6 +33,10 @@ const long gmtOffset_sec = 9 * 3600; // 日本時間 (UTC+9)
 const int daylightOffset_sec = 0;
 
 // IP/MAC Addr、SSID、パスワード
+String g_ip_addr_str;
+String g_mac_addr_str;
+String g_wifi_ssid_str;
+String g_wifi_password_str;
 uint8_t *p_ip_addr = NULL;
 uint8_t *p_mac_addr = NULL;
 uint8_t *p_wifi_ssid = NULL;
@@ -63,22 +67,34 @@ static void wifi_online_proc(void);
 static void wifi_off_online_proc(void);
 static void ap_mode_main(void);
 static void sta_mode_main(void);
-static void connect_info_print(void);
+static void wifi_connect_info_print(void);
 
 WiFiConfig g_wifi_config;
+IPAddress g_ip_addr;
 
 /**
- * @brief 接続情報表示（IP、MACアドレス、SSID、パスワード）
+ * @brief WiFi接続情報表示（IPアドレス、MACアドレス、SSID、パスワード）
  * 
  */
-static void connect_info_print(void)
+static void wifi_connect_info_print(void)
 {
-    p_ip_addr  = (uint8_t *)WiFi.localIP().toString().c_str();
-    p_mac_addr = (uint8_t *)WiFi.macAddress().c_str();
-    p_wifi_ssid     = (uint8_t *)g_wifi_config.ssid.c_str();
-    p_wifi_password = (uint8_t *)g_wifi_config.password.c_str();
-    DEBUG_PRINTF_RTOS("IP addr : %s\n",p_ip_addr );
-    DEBUG_PRINTF_RTOS("WiFi MAC addr : %s\n", p_mac_addr);
+    g_ip_addr           = WiFi.localIP();
+
+    // String型を保存
+    g_ip_addr_str       = g_ip_addr.toString();
+    g_mac_addr_str      = WiFi.macAddress();
+    g_wifi_ssid_str     = g_wifi_config.ssid;
+    g_wifi_password_str = g_wifi_config.password;
+
+    // String型 -> uint8_tのポインタに変換
+    p_ip_addr           = (uint8_t *)g_ip_addr_str.c_str();
+    p_mac_addr          = (uint8_t *)g_mac_addr_str.c_str();
+    p_wifi_ssid         = (uint8_t *)g_wifi_ssid_str.c_str();
+    p_wifi_password     = (uint8_t *)g_wifi_password_str.c_str();
+
+    // printf()
+    DEBUG_PRINTF_RTOS("IP Address : %s\n", p_ip_addr);
+    DEBUG_PRINTF_RTOS("WiFi MAC Address : %s\n", p_mac_addr);
     DEBUG_PRINTF_RTOS("STA SSID : %s\n", p_wifi_ssid);
     DEBUG_PRINTF_RTOS("STA Password : %s\n", p_wifi_password);
 }
@@ -234,7 +250,7 @@ static void wifi_online_proc(void)
         app_ftp_main();
 #endif
     } else {
-        connect_info_print();
+        wifi_connect_info_print();
         app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_WHITE]);
     }
 }
@@ -272,7 +288,7 @@ static void sta_mode_main(void)
         app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_GREEN]);
 
         DEBUG_PRINTF_RTOS("\nWiFi接続完了!\n");
-        connect_info_print();
+        wifi_connect_info_print();
 
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
