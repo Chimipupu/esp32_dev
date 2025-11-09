@@ -18,6 +18,8 @@
 #include "app_file_system.hpp"
 #include "app_neopixel.hpp"
 
+// --------------------------------------------------
+// [グローバル変数]
 WebServer server(80);
 
 // ファイルシステム
@@ -48,13 +50,20 @@ typedef enum {
     STA_WIFI_CONFIG = 0xFF
 } e_html_type;
 
+WiFiConfig g_wifi_config;
+IPAddress g_ip_addr;
+
+// --------------------------------------------------
+// [Static]
 static e_html_type s_html_type = STA_WIFI_CONFIG;
-// static rgbled_state_t s_rgbled_state;
 static tm s_ntp_timeinfo_t;
 static tm s_rtc_timeinfo_t;
 static bool s_wifi_flag = false;
 static bool s_ap_flg = false;
+
+#ifdef __FTP_ENABLE__
 static bool s_ftp_flg = false;
+#endif // __FTP_ENABLE__
 
 static bool fs_read_wifi_config(void);
 static void saveWiFiConfig(const String &ssid, const String &password);
@@ -67,16 +76,14 @@ static void wifi_online_proc(void);
 static void wifi_off_online_proc(void);
 static void ap_mode_main(void);
 static void sta_mode_main(void);
-static void wifi_connect_info_print(void);
-
-WiFiConfig g_wifi_config;
-IPAddress g_ip_addr;
+static void wifi_info_print(void);
+// --------------------------------------------------
 
 /**
  * @brief WiFi接続情報表示（IPアドレス、MACアドレス、SSID、パスワード）
  * 
  */
-static void wifi_connect_info_print(void)
+static void wifi_info_print(void)
 {
     g_ip_addr           = WiFi.localIP();
 
@@ -92,11 +99,11 @@ static void wifi_connect_info_print(void)
     p_wifi_ssid         = (uint8_t *)g_wifi_ssid_str.c_str();
     p_wifi_password     = (uint8_t *)g_wifi_password_str.c_str();
 
-    // printf()
-    DEBUG_PRINTF_RTOS("IP Address : %s\n", p_ip_addr);
-    DEBUG_PRINTF_RTOS("WiFi MAC Address : %s\n", p_mac_addr);
-    DEBUG_PRINTF_RTOS("STA SSID : %s\n", p_wifi_ssid);
-    DEBUG_PRINTF_RTOS("STA Password : %s\n", p_wifi_password);
+    // 接続情報をprintf()
+    DEBUG_PRINTF_RTOS("[DEBUG] IP Addr: %s\r\n", p_ip_addr);
+    DEBUG_PRINTF_RTOS("[DEBUG] WiFi MAC Addr: %s\r\n", p_mac_addr);
+    DEBUG_PRINTF_RTOS("[DEBUG] STA SSID: %s\r\n", p_wifi_ssid);
+    DEBUG_PRINTF_RTOS("[DEBUG] STA Password: %s\r\n", p_wifi_password);
 }
 
 static bool fs_read_wifi_config(void)
@@ -241,27 +248,45 @@ static void set_ntp_to_rtc_time(void)
     time_show(RTC_TIME);
 }
 
+/**
+ * @brief オンライン処理
+ * 
+ */
 static void wifi_online_proc(void)
 {
+#ifdef __FTP_ENABLE__
+    // FTPメイン
     if(s_ftp_flg != false)
     {
-        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
-#ifdef __FTP_ENABLE__
         app_ftp_main();
-#endif
-    } else {
-        wifi_connect_info_print();
-        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_WHITE]);
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
     }
+#else
+    // WiFiメイン処理
+    wifi_info_print();
+    app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_WHITE]);
+#endif // __FTP_ENABLE__
 }
 
+/**
+ * @brief オフライン処理
+ * 
+ */
 static void wifi_off_online_proc(void)
 {
+    // TODO オフライン処理の実装
+#if 1
     if(s_ap_flg != false){
         app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_BLUE]);
     }else{
-        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_RED]);
+        // DeepSleep @DEEPSLEEP_TIME_US
+        app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_OFF]);
+        uint32_t deepsleep_time = (DEEPSLEEP_TIME_US / 60) / 1000000;
+        DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main ... No Proc. DeepSleep Now!\n");
+        DEBUG_PRINTF_RTOS("DeepSleep : %d min\n", deepsleep_time);
+        esp_deep_sleep_start();
     }
+#endif
 }
 
 static void sta_mode_main(void)
@@ -288,7 +313,7 @@ static void sta_mode_main(void)
         app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_GREEN]);
 
         DEBUG_PRINTF_RTOS("\nWiFi接続完了!\n");
-        wifi_connect_info_print();
+        wifi_info_print();
 
         DEBUG_PRINTF_RTOS("NTPサーバーに接続...\n");
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -303,20 +328,19 @@ static void sta_mode_main(void)
         server.begin();
         server.handleClient();
 
-#ifdef __FTP_ENABLE__
-        // FTP Server
-        app_ftp_init();
-        s_ftp_flg = true;
-#endif // __FTP_ENABLE__
-
-#if 0
+#if 1
         // WiFi切断
-        DEBUG_PRINTF_RTOS("WiFiから切断\n");
+        DEBUG_PRINTF_RTOS("[DEBUGWiFiから切断\n");
         WiFi.disconnect();
         s_wifi_flag = false;
 #else
         // WiFiの接続を継続
         s_wifi_flag = true;
+    #ifdef __FTP_ENABLE__
+        // FTP Server
+        app_ftp_init();
+        s_ftp_flg = true;
+    #endif // __FTP_ENABLE__
 #endif
     } else {
         s_wifi_flag = true;
@@ -402,8 +426,10 @@ bool app_wifi_main(void)
 {
     if ((s_wifi_flag != true) || (WiFi.status() != WL_CONNECTED))
     {
+        // オフライン処理
         wifi_off_online_proc();
     } else {
+        // オンライン処理
         wifi_online_proc();
     }
 

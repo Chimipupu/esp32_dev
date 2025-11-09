@@ -9,12 +9,22 @@
  * 
  */
 
+#include "esp_system.h"
+
 #include "common.hpp"
 #include "app_main_core1.hpp"
 #include "app_btn.hpp"
 #include "app_neopixel.hpp"
 #include "app_file_system.hpp"
 
+// --------------------------------------------------
+// [グローバル変数]
+
+// RTC Slow Memの変数(リセットでも消えない領域)
+RTC_DATA_ATTR uint32_t g_boot_cnt = 0;
+
+// --------------------------------------------------
+// [Static]
 #ifdef __ESP_NOW_ENABLE__
 #include "app_esp_now.hpp"
 static xTaskHandle s_xTaskCore1EspNow;
@@ -25,6 +35,63 @@ static xTaskHandle s_xTaskCore1Btn;
 static xTaskHandle s_xTaskCore1WiFi;
 // static xTaskHandle s_xTaskCore1Main;
 static bool s_wifi_flag = true;
+static void rst_reson_check(void);
+// --------------------------------------------------
+
+static void rst_reson_check(void)
+{
+    esp_reset_reason_t reason = esp_reset_reason();
+
+    switch (reason) {
+        case ESP_RST_UNKNOWN:
+            Serial.println("(DEBUG)Reset reason: UNKNOWN");
+            break;
+
+        case ESP_RST_POWERON:
+            Serial.println("(DEBUG)Reset reason: POWER ON");
+            break;
+
+        case ESP_RST_EXT:
+            Serial.println("(DEBUG)Reset reason: EXTERNAL RESET");
+            break;
+
+        case ESP_RST_SW:
+            Serial.println("(DEBUG)Reset reason: SOFTWARE RESET");
+            break;
+
+        case ESP_RST_PANIC:
+            Serial.println("(DEBUG)Reset reason: PANIC RESET");
+            break;
+
+        case ESP_RST_INT_WDT:
+            Serial.println("(DEBUG)Reset reason: INTERRUPT WATCHDOG");
+            break;
+
+        case ESP_RST_TASK_WDT:
+            Serial.println("(DEBUG)Reset reason: TASK WATCHDOG");
+            break;
+
+        case ESP_RST_WDT:
+            Serial.println("(DEBUG)Reset reason: OTHER WATCHDOG");
+            break;
+
+        case ESP_RST_DEEPSLEEP:
+            Serial.println("(DEBUG)Reset reason: DEEP SLEEP WAKEUP");
+            break;
+
+        case ESP_RST_BROWNOUT:
+            Serial.println("(DEBUG)Reset reason: BROWNOUT RESET");
+            break;
+
+        case ESP_RST_SDIO:
+            Serial.println("(DEBUG)Reset reason: SDIO RESET");
+            break;
+
+        default:
+            Serial.println("(DEBUG)Reset reason: UNKNOWN VALUE");
+            break;
+    }
+}
 
 void vTaskCore1Btn(void *p_parameter)
 {
@@ -96,24 +163,7 @@ void vTaskCore1Main(void *p_parameter)
 
     while (1)
     {
-#if 0
-        if ((s_wifi_flag != true) && (s_espnow_flag != true))
-        {
-            // DeepSleep @DEEPSLEEP_TIME_US
-            uint32_t dat = (DEEPSLEEP_TIME_US / 60) / 1000000;
-            DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main ... No Proc. DeepSleep Now!\n");
-            DEBUG_PRINTF_RTOS("DeepSleep : %d min\n", dat);
-            app_neopixel_set_color(0, &g_led_color_tbl[TBL_IDX_COLOR_PURPLE]);
-            esp_deep_sleep_start();
-        } else {
-            // TODO: Core1メインタスクの処理実装
-            NOP;
-        }
-        vTaskDelay(200 / portTICK_PERIOD_MS);
-#else
-        // DEBUG_PRINTF_RTOS("[Core1] vTaskCore1Main\n");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-#endif
+        // TODO
     }
 }
 #endif
@@ -127,6 +177,11 @@ void app_main_init_core1(void)
     while (!Serial) {
         WDT_TOGGLE;
     }
+    DEBUG_PRINTF_RTOS("[DEBUG] Boot Cnt: %d\r\n", g_boot_cnt);
+
+    // Deep Sleep
+    rst_reson_check();
+    esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
     // PSRAM初期化
     app_fs_psram_init();
@@ -137,9 +192,6 @@ void app_main_init_core1(void)
 
     // ボタン初期化
     app_btn_init();
-
-    // Deep Sleep
-    esp_sleep_enable_timer_wakeup(DEEPSLEEP_TIME_US);
 
     // FreeRTOS
 #if 1
