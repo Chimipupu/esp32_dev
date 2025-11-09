@@ -177,6 +177,7 @@ void app_main_init_core1(void)
     while (!Serial) {
         WDT_TOGGLE;
     }
+    g_boot_cnt++;
     DEBUG_PRINTF_RTOS("[DEBUG] Boot Cnt: %d\r\n", g_boot_cnt);
 
     // Deep Sleep

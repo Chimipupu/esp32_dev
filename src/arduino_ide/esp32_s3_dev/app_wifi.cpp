@@ -100,10 +100,10 @@ static void wifi_info_print(void)
     p_wifi_password     = (uint8_t *)g_wifi_password_str.c_str();
 
     // 接続情報をprintf()
-    DEBUG_PRINTF_RTOS("[DEBUG] IP Addr: %s\r\n", p_ip_addr);
-    DEBUG_PRINTF_RTOS("[DEBUG] WiFi MAC Addr: %s\r\n", p_mac_addr);
-    DEBUG_PRINTF_RTOS("[DEBUG] STA SSID: %s\r\n", p_wifi_ssid);
-    DEBUG_PRINTF_RTOS("[DEBUG] STA Password: %s\r\n", p_wifi_password);
+    DEBUG_PRINTF_RTOS("[DEBUG] IP Addr: %s\n", p_ip_addr);
+    DEBUG_PRINTF_RTOS("[DEBUG] WiFi MAC Addr: %s\n", p_mac_addr);
+    DEBUG_PRINTF_RTOS("[DEBUG] STA SSID: %s\n", p_wifi_ssid);
+    DEBUG_PRINTF_RTOS("[DEBUG] STA Password: %s\n", p_wifi_password);
 }
 
 static bool fs_read_wifi_config(void)
@@ -330,7 +330,7 @@ static void sta_mode_main(void)
 
 #if 1
         // WiFi切断
-        DEBUG_PRINTF_RTOS("[DEBUGWiFiから切断\n");
+        DEBUG_PRINTF_RTOS("[DEBUG]WiFiから切断\n");
         WiFi.disconnect();
         s_wifi_flag = false;
 #else
